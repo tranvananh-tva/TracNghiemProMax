@@ -941,7 +941,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollToTop();
 });
 
-// Scroll to top functionality
+// Scroll to top functionality - Improved version
 function initScrollToTop() {
     const scrollBtn = document.createElement('button');
     scrollBtn.id = 'scroll-to-top';
@@ -950,13 +950,19 @@ function initScrollToTop() {
     scrollBtn.title = 'Cuộn lên đầu trang';
     document.body.appendChild(scrollBtn);
     
+    // Chỉ hiện nút khi cuộn xuống > 500px (thay vì 300px)
+    let scrollTimeout;
     window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 300) {
-            scrollBtn.classList.add('visible');
-        } else {
-            scrollBtn.classList.remove('visible');
-        }
-    });
+        // Debounce để tối ưu performance
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            if (window.pageYOffset > 500) {
+                scrollBtn.classList.add('visible');
+            } else {
+                scrollBtn.classList.remove('visible');
+            }
+        }, 100);
+    }, { passive: true });
     
     scrollBtn.addEventListener('click', () => {
         window.scrollTo({

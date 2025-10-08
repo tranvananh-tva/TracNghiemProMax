@@ -1,0 +1,993 @@
+/* ========================================
+   MOBILE OPTIMIZATION - ENHANCED VERSION
+   Cải thiện giao diện mobile gọn gàng hơn
+   ======================================== */
+
+/* ========================================
+   NÚT SCROLL TO TOP - CẢI TIẾN
+   Chỉ hiện khi cuộn xuống đủ xa (>500px)
+   ======================================== */
+
+.scroll-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: var(--bg-gradient);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 998;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(100px) scale(0.5);
+    pointer-events: none;
+}
+
+/* Chỉ hiện khi cuộn xu��ng > 500px */
+.scroll-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: all;
+}
+
+.scroll-to-top:hover {
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.scroll-to-top:active {
+    transform: translateY(-2px) scale(1.05);
+}
+
+.scroll-to-top i {
+    animation: bounceUpDown 2s ease-in-out infinite;
+}
+
+@keyframes bounceUpDown {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-4px);
+    }
+}
+
+/* Mobile: Nút nhỏ hơn và vị trí tối ưu */
+@media (max-width: 767px) {
+    .scroll-to-top {
+        width: 46px;
+        height: 46px;
+        bottom: 16px;
+        right: 16px;
+        font-size: 18px;
+        box-shadow: 0 3px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .scroll-to-top:hover {
+        transform: translateY(-3px) scale(1.08);
+    }
+}
+
+@media (max-width: 479px) {
+    .scroll-to-top {
+        width: 44px;
+        height: 44px;
+        bottom: 14px;
+        right: 14px;
+        font-size: 17px;
+    }
+}
+
+/* ========================================
+   MOBILE HEADER - COMPACT VERSION
+   ======================================== */
+
+@media (max-width: 767px) {
+    .top-header {
+        height: 56px;
+        padding: 0 10px 0 60px;
+        gap: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .header-center {
+        flex: 1;
+        max-width: none;
+    }
+    
+    .search-bar {
+        padding: 8px 12px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+    
+    .search-bar input {
+        font-size: 14px;
+    }
+    
+    .search-bar i {
+        font-size: 14px;
+    }
+    
+    .header-right {
+        gap: 6px;
+    }
+    
+    .btn-create-quiz,
+    .theme-toggle-btn {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-create-quiz span {
+        display: none;
+    }
+    
+    .btn-create-quiz i,
+    .theme-toggle-btn i {
+        font-size: 16px;
+        margin: 0;
+    }
+    
+    .user-avatar-small {
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
+    }
+}
+
+/* ========================================
+   MOBILE CONTENT - COMPACT SPACING
+   ======================================== */
+
+@media (max-width: 767px) {
+    .main-content-area {
+        padding: 12px 10px;
+    }
+    
+    .page-header {
+        margin-bottom: 16px;
+        padding: 0;
+    }
+    
+    .page-title {
+        font-size: 20px;
+        gap: 8px;
+        line-height: 1.3;
+    }
+    
+    .page-title i {
+        font-size: 20px;
+    }
+    
+    /* Section spacing */
+    .stats-section,
+    .recent-section,
+    .features-section {
+        padding: 16px 12px;
+        margin-bottom: 14px;
+        border-radius: 14px;
+    }
+    
+    .section-title {
+        font-size: 17px;
+        margin-bottom: 12px;
+    }
+    
+    .section-header {
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+    }
+}
+
+/* ========================================
+   MOBILE STATS - COMPACT CARDS
+   ======================================== */
+
+@media (max-width: 767px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .stat-card {
+        padding: 14px 12px;
+        gap: 10px;
+        border-radius: 12px;
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        border-radius: 10px;
+    }
+    
+    .stat-value {
+        font-size: 20px;
+        margin-bottom: 2px;
+    }
+    
+    .stat-label {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+}
+
+@media (max-width: 479px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .stat-card {
+        flex-direction: row;
+        padding: 12px;
+        gap: 12px;
+    }
+    
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+    
+    .stat-content {
+        flex: 1;
+        text-align: left;
+    }
+    
+    .stat-value {
+        font-size: 22px;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+    }
+}
+
+/* ========================================
+   MOBILE FORMS - COMPACT & CLEAN
+   ======================================== */
+
+@media (max-width: 767px) {
+    .form-card {
+        padding: 18px 14px;
+        border-radius: 14px;
+    }
+    
+    .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .form-group label {
+        font-size: 13px;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+    
+    .form-input,
+    .form-select,
+    .form-textarea {
+        padding: 11px 14px;
+        font-size: 15px;
+        border-radius: 10px;
+        border-width: 1.5px;
+    }
+    
+    .form-textarea {
+        min-height: 100px;
+        line-height: 1.5;
+    }
+    
+    .form-textarea.large {
+        min-height: 140px;
+    }
+    
+    .btn-paste-inline {
+        padding: 9px 14px;
+        font-size: 13px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+    }
+    
+    .form-actions {
+        gap: 10px;
+        margin-top: 18px;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        padding: 12px 20px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+}
+
+/* ========================================
+   MOBILE QUIZ CARDS - COMPACT
+   ======================================== */
+
+@media (max-width: 767px) {
+    .quiz-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .quiz-card,
+    .quiz-item {
+        padding: 14px;
+        border-radius: 12px;
+        border-width: 1.5px;
+    }
+    
+    .quiz-card-header h3,
+    .quiz-item-info h3 {
+        font-size: 16px;
+        margin-bottom: 6px;
+        line-height: 1.3;
+    }
+    
+    .quiz-card-header p,
+    .quiz-item-info p {
+        font-size: 13px;
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+    
+    .quiz-card-meta,
+    .quiz-item-meta {
+        font-size: 11px;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .quiz-card-meta span,
+    .quiz-item-meta span {
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
+    
+    .quiz-card-actions,
+    .quiz-item-actions {
+        gap: 8px;
+        margin-top: 10px;
+    }
+    
+    .btn-sm {
+        padding: 7px 12px;
+        font-size: 12px;
+        border-radius: 8px;
+    }
+}
+
+/* ========================================
+   MOBILE QUESTION CARDS - OPTIMIZED
+   ======================================== */
+
+@media (max-width: 767px) {
+    .question-card,
+    .question-card-modern {
+        padding: 16px 12px;
+        margin-bottom: 14px;
+        border-radius: 12px;
+        border-width: 1.5px;
+    }
+    
+    .question-header {
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    
+    .question-number {
+        min-width: 34px;
+        height: 34px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+    
+    .question-text,
+    .question-text-modern {
+        font-size: 15px;
+        line-height: 1.6;
+        padding: 12px;
+        border-radius: 10px;
+    }
+    
+    .options,
+    .options-modern {
+        gap: 10px;
+        margin-top: 12px;
+    }
+    
+    .option,
+    .option-modern {
+        padding: 12px;
+        gap: 10px;
+        min-height: 50px;
+        border-radius: 10px;
+        border-width: 1.5px;
+    }
+    
+    .option input[type="radio"],
+    .option-modern input[type="radio"] {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .option-label,
+    .option-modern .option-letter {
+        min-width: 24px;
+        font-size: 14px;
+    }
+    
+    .option-text,
+    .option-modern .option-text {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    /* Giảm hiệu ứng transform để mượt hơn */
+    .option:hover,
+    .option-modern:hover {
+        transform: translateX(4px) scale(1.005);
+    }
+    
+    .option.selected,
+    .option-modern.selected {
+        transform: translateX(6px) scale(1.01);
+    }
+}
+
+/* ========================================
+   MOBILE QUIZ NAVIGATION - COMPACT
+   ======================================== */
+
+@media (max-width: 767px) {
+    .quiz-sidebar-right {
+        padding: 14px;
+        border-radius: 12px;
+    }
+    
+    .grid-title {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    .question-grid {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+    }
+    
+    .question-grid-item {
+        font-size: 12px;
+        min-height: 38px;
+        border-radius: 8px;
+        border-width: 1.5px;
+        padding: 0;
+    }
+    
+    .quiz-navigation {
+        gap: 10px;
+        margin-top: 14px;
+    }
+    
+    .btn-nav {
+        padding: 11px 18px;
+        font-size: 13px;
+        border-radius: 10px;
+    }
+}
+
+@media (max-width: 479px) {
+    .question-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 5px;
+    }
+    
+    .question-grid-item {
+        font-size: 11px;
+        min-height: 36px;
+    }
+}
+
+/* ========================================
+   MOBILE RESULTS - COMPACT
+   ======================================== */
+
+@media (max-width: 767px) {
+    .results-header {
+        padding: 28px 18px;
+        border-radius: 14px;
+        margin-bottom: 16px;
+    }
+    
+    .performance-badge {
+        font-size: 50px;
+        margin-bottom: 10px;
+    }
+    
+    .quiz-title-result {
+        font-size: 14px;
+        margin-bottom: 14px;
+    }
+    
+    .score-display {
+        font-size: 54px;
+        margin-bottom: 10px;
+    }
+    
+    .score-text {
+        font-size: 16px;
+    }
+    
+    .results-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+    
+    .stat-card {
+        padding: 16px 12px;
+    }
+    
+    .stat-number {
+        font-size: 24px;
+    }
+    
+    .stat-label {
+        font-size: 11px;
+    }
+    
+    .action-buttons-container {
+        padding: 14px;
+        gap: 8px;
+        margin: 16px 0;
+        border-radius: 12px;
+    }
+    
+    .action-buttons-container .btn {
+        padding: 11px 16px;
+        font-size: 13px;
+        border-radius: 10px;
+    }
+    
+    .result-question {
+        padding: 14px;
+        margin-bottom: 12px;
+        border-radius: 12px;
+    }
+    
+    .result-question-text {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    .result-options {
+        gap: 8px;
+    }
+    
+    .result-option {
+        padding: 11px 12px;
+        border-radius: 10px;
+        border-width: 1.5px;
+    }
+    
+    .result-option .option-text {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 479px) {
+    .results-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons-container {
+        flex-direction: column;
+    }
+    
+    .action-buttons-container .btn {
+        width: 100%;
+    }
+}
+
+/* ========================================
+   MOBILE MODAL - FULL SCREEN ON SMALL
+   ======================================== */
+
+@media (max-width: 767px) {
+    .modal-content {
+        width: 95%;
+        max-width: 500px;
+        max-height: 90vh;
+        border-radius: 14px;
+    }
+    
+    .modal-header {
+        padding: 16px;
+    }
+    
+    .modal-header h3 {
+        font-size: 17px;
+    }
+    
+    .modal-close {
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+    }
+    
+    .modal-body {
+        padding: 16px;
+        max-height: calc(90vh - 130px);
+    }
+    
+    .modal-footer {
+        padding: 16px;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 479px) {
+    .modal-content {
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    
+    .modal-body {
+        max-height: calc(100vh - 130px);
+    }
+}
+
+/* ========================================
+   MOBILE AI SECTION - COMPACT
+   ======================================== */
+
+@media (max-width: 767px) {
+    .ai-info-banner {
+        padding: 12px;
+        font-size: 13px;
+        gap: 10px;
+        border-radius: 10px;
+    }
+    
+    .ai-info-banner i {
+        font-size: 18px;
+    }
+    
+    .file-upload-area {
+        padding: 18px 14px;
+        border-radius: 12px;
+    }
+    
+    .file-upload-content h4 {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+    
+    .file-upload-content p {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+    
+    .divider-with-text {
+        margin: 16px 0;
+        font-size: 12px;
+    }
+    
+    .ai-preview-section {
+        padding: 16px 12px;
+        border-radius: 12px;
+    }
+    
+    .ai-preview-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    
+    .ai-preview-header h3 {
+        font-size: 17px;
+    }
+    
+    .preview-question {
+        padding: 14px;
+        margin-bottom: 12px;
+        border-radius: 12px;
+    }
+    
+    .preview-question-number {
+        min-width: 34px;
+        height: 34px;
+        font-size: 14px;
+    }
+    
+    .preview-question-text {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    .preview-options {
+        gap: 8px;
+    }
+    
+    .preview-option {
+        padding: 11px 12px;
+        border-radius: 10px;
+        border-width: 1.5px;
+    }
+    
+    .preview-option-text {
+        font-size: 13px;
+    }
+    
+    .preview-correct-answer {
+        padding: 6px 12px;
+        font-size: 11px;
+        border-radius: 12px;
+    }
+}
+
+/* ========================================
+   MOBILE TOAST - BOTTOM CENTER
+   ======================================== */
+
+@media (max-width: 767px) {
+    .toast {
+        bottom: 14px;
+        right: 14px;
+        left: 14px;
+        min-width: auto;
+        padding: 12px 14px;
+        font-size: 13px;
+        border-radius: 10px;
+    }
+    
+    .toast i {
+        font-size: 18px;
+    }
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+@media (max-width: 767px) {
+    /* Giảm animations phức tạp trên mobile */
+    .option::before,
+    .option::after,
+    .option-modern::before,
+    .option-modern::after {
+        display: none;
+    }
+    
+    /* Đơn giản hóa transitions */
+    .option,
+    .option-modern,
+    .question-card,
+    .question-card-modern,
+    .btn {
+        transition: all 0.2s ease;
+    }
+    
+    /* Tắt hover effects trên touch devices */
+    @media (hover: none) {
+        .option:hover,
+        .option-modern:hover {
+            transform: none;
+            border-color: var(--border-color);
+        }
+        
+        .btn:hover {
+            transform: none;
+        }
+    }
+}
+
+/* ========================================
+   LANDSCAPE MODE - OPTIMIZED
+   ======================================== */
+
+@media (max-height: 500px) and (orientation: landscape) {
+    .top-header {
+        height: 48px;
+    }
+    
+    .mobile-menu-toggle {
+        width: 38px;
+        height: 38px;
+    }
+    
+    .question-card,
+    .question-card-modern {
+        padding: 12px;
+    }
+    
+    .question-text,
+    .question-text-modern {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .option,
+    .option-modern {
+        padding: 10px;
+        min-height: 44px;
+    }
+    
+    .results-header {
+        padding: 16px;
+    }
+    
+    .performance-badge {
+        font-size: 36px;
+        margin-bottom: 6px;
+    }
+    
+    .score-display {
+        font-size: 40px;
+        margin-bottom: 6px;
+    }
+    
+    .results-stats {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+}
+
+/* ========================================
+   VERY SMALL SCREENS - ULTRA COMPACT
+   ======================================== */
+
+@media (max-width: 359px) {
+    .top-header {
+        padding: 0 6px 0 54px;
+    }
+    
+    .mobile-menu-toggle {
+        width: 38px;
+        height: 38px;
+        left: 10px;
+        top: 10px;
+    }
+    
+    .btn-create-quiz,
+    .theme-toggle-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .page-title {
+        font-size: 18px;
+    }
+    
+    .section-title {
+        font-size: 16px;
+    }
+    
+    .form-card {
+        padding: 14px 10px;
+    }
+    
+    .question-card,
+    .question-card-modern {
+        padding: 12px 10px;
+    }
+    
+    .option,
+    .option-modern {
+        padding: 10px;
+    }
+    
+    .question-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* ========================================
+   SAFE AREA INSETS - NOTCHED DEVICES
+   ======================================== */
+
+@supports (padding: max(0px)) {
+    @media (max-width: 767px) {
+        .top-header {
+            padding-left: max(60px, calc(env(safe-area-inset-left) + 60px));
+            padding-right: max(10px, calc(env(safe-area-inset-right) + 10px));
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .mobile-menu-toggle {
+            left: max(12px, calc(env(safe-area-inset-left) + 12px));
+            top: max(12px, calc(env(safe-area-inset-top) + 12px));
+        }
+        
+        .main-content-area {
+            padding-left: max(10px, calc(env(safe-area-inset-left) + 10px));
+            padding-right: max(10px, calc(env(safe-area-inset-right) + 10px));
+            padding-bottom: max(12px, calc(env(safe-area-inset-bottom) + 12px));
+        }
+        
+        .scroll-to-top {
+            bottom: max(14px, calc(env(safe-area-inset-bottom) + 14px));
+            right: max(14px, calc(env(safe-area-inset-right) + 14px));
+        }
+        
+        .toast {
+            bottom: max(14px, calc(env(safe-area-inset-bottom) + 14px));
+            left: max(14px, calc(env(safe-area-inset-left) + 14px));
+            right: max(14px, calc(env(safe-area-inset-right) + 14px));
+        }
+    }
+}
+
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ======================================== */
+
+@media (max-width: 767px) {
+    /* Larger touch targets */
+    button,
+    a,
+    .nav-item,
+    input[type="radio"],
+    input[type="checkbox"] {
+        min-height: 44px;
+    }
+    
+    /* Better focus indicators */
+    *:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+    
+    /* Prevent text selection on buttons */
+    button,
+    .btn {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+}
+
+/* ========================================
+   DARK MODE ADJUSTMENTS FOR MOBILE
+   ======================================== */
+
+@media (max-width: 767px) {
+    body.dark-mode .question-card,
+    body.dark-mode .question-card-modern,
+    body.dark-mode .option,
+    body.dark-mode .option-modern {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    body.dark-mode .option:hover,
+    body.dark-mode .option-modern:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    body.dark-mode .option.selected,
+    body.dark-mode .option-modern.selected {
+        border-color: var(--primary-color);
+        background: rgba(102, 126, 234, 0.15);
+    }
+}

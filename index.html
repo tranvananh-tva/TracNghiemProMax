@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="style-updated.css">
     <link rel="stylesheet" href="style-ai-quiz.css">
     <link rel="stylesheet" href="style-responsive-enhanced.css">
+    <link rel="stylesheet" href="style-mobile-enhanced.css">
+    <link rel="stylesheet" href="style-mobile-optimized.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- JSZip library for reading Word files -->
@@ -17,6 +19,14 @@
 </head>
 
 <body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobile-menu-toggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    
     <!-- Main Layout -->
     <div class="app-layout">
         <!-- Sidebar -->
@@ -543,6 +553,7 @@
     <script src="script-updated.js"></script>
     <script src="ai-quiz.js"></script>
     <script src="ai-file-handler.js"></script>
+    <script src="mobile-menu.js"></script>
     <script>
         // Override renderQuiz with modern version for 3-column layout
         document.addEventListener('DOMContentLoaded', function() {

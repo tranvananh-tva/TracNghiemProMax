@@ -1243,7 +1243,7 @@ if (typeof QuizManager !== 'undefined') {
     QuizManager.prototype.loadAISettings = function() {
         if (!this.aiGenerator) {
             this.aiGenerator = new AIQuizGenerator(this);
-            this.aiGenerator.loadAISettings();
+            console.log('✅ AI Quiz Generator đã được khởi tạo');
         }
     };
 }
