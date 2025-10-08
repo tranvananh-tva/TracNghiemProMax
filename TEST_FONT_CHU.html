@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Font Chữ Tiếng Việt - AI File Upload</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .file-input-wrapper {
+            margin: 20px 0;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+            background: white;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .result-box.empty {
+            color: #999;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .test-samples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .sample-text {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        .sample-text strong {
+            display: block;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Font Chữ Tiếng Việt</h1>
+        <p class="subtitle">Kiểm tra khả năng đọc file Word và hiển thị tiếng Việt chính xác</p>
+
+        <!-- Test 1: Sample Text -->
+        <div class="test-section">
+            <h2>📝 Test 1: Mẫu Text Tiếng Việt</h2>
+            <p>Các ký tự tiếng Việt cần hiển thị đúng:</p>
+            <div class="test-samples">
+                <div class="sample-text">
+                    <strong>Nguyên âm:</strong>
+                    à á ả ã ạ ă ằ ắ ẳ ẵ ặ â ầ ấ ẩ ẫ ậ
+                </div>
+                <div class="sample-text">
+                    <strong>Phụ âm:</strong>
+                    đ Đ
+                </div>
+                <div class="sample-text">
+                    <strong>Câu mẫu:</strong>
+                    Việt Nam là một quốc gia xinh đẹp
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 2: File Upload -->
+        <div class="test-section">
+            <h2>📤 Test 2: Upload File Word</h2>
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" accept=".txt,.docx" />
+            </div>
+            <button onclick="testReadFile()">Đọc File</button>
+            <button onclick="clearResult()">Xóa Kết Quả</button>
+            
+            <div id="status"></div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Độ dài text</div>
+                    <div class="stat-value" id="textLength">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Số ký tự tiếng Việt</div>
+                    <div class="stat-value" id="vietnameseCount">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Encoding</div>
+                    <div class="stat-value" id="encoding">-</div>
+                </div>
+            </div>
+
+            <div id="result" class="result-box empty">
+                Chưa có kết quả. Vui lòng chọn file và click "Đọc File"
+            </div>
+        </div>
+
+        <!-- Test 3: Manual Input -->
+        <div class="test-section">
+            <h2>⌨️ Test 3: Nhập Text Thủ Công</h2>
+            <textarea id="manualInput" 
+                      style="width: 100%; min-height: 100px; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: inherit;"
+                      placeholder="Nhập hoặc dán text tiếng Việt vào đây để test..."></textarea>
+            <button onclick="testManualInput()">Test Text</button>
+            <div id="manualResult" class="result-box empty" style="margin-top: 15px;">
+                Kết quả sẽ hiển thị ở đây
+            </div>
+        </div>
+
+        <!-- Test 4: Encoding Detection -->
+        <div class="test-section">
+            <h2>🔍 Test 4: Kiểm Tra Encoding</h2>
+            <p>Test các encoding khác nhau:</p>
+            <button onclick="testEncoding('UTF-8')">UTF-8</button>
+            <button onclick="testEncoding('UTF-16')">UTF-16</button>
+            <button onclick="testEncoding('windows-1252')">Windows-1252</button>
+            <div id="encodingResult" class="result-box empty" style="margin-top: 15px;">
+                Kết quả encoding test
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test functions
+        async function testReadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showStatus('Vui lòng chọn file!', 'error');
+                return;
+            }
+
+            showStatus('Đang đọc file...', 'info');
+            
+            try {
+                let text = '';
+                const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+                
+                if (fileExt === '.txt') {
+                    text = await readTextFile(file);
+                } else if (fileExt === '.docx') {
+                    text = await readWordFile(file);
+                } else {
+                    throw new Error('Định dạng file không được hỗ trợ');
+                }
+                
+                displayResult(text);
+                analyzeText(text);
+                showStatus('✅ Đọc file thành công!', 'success');
+                
+            } catch (error) {
+                showStatus('❌ Lỗi: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+
+        async function readTextFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('Không thể đọc file TXT'));
+                reader.readAsText(file, 'UTF-8');
+            });
+        }
+
+        async function readWordFile(file) {
+            if (typeof JSZip === 'undefined') {
+                throw new Error('Thiếu thư viện JSZip');
+            }
+
+            const arrayBuffer = await file.arrayBuffer();
+            const zip = await JSZip.loadAsync(arrayBuffer);
+            const documentXml = await zip.file('word/document.xml').async('string');
+            
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(documentXml, 'text/xml');
+            const textNodes = xmlDoc.getElementsByTagName('w:t');
+            
+            let text = '';
+            for (let i = 0; i < textNodes.length; i++) {
+                text += textNodes[i].textContent + ' ';
+            }
+            
+            return cleanText(text.trim());
+        }
+
+        function cleanText(text) {
+            return text
+                .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '')
+                .replace(/[ \t]+/g, ' ')
+                .replace(/\n\s*\n\s*\n/g, '\n\n')
+                .trim();
+        }
+
+        function displayResult(text) {
+            const resultBox = document.getElementById('result');
+            resultBox.textContent = text;
+            resultBox.classList.remove('empty');
+        }
+
+        function analyzeText(text) {
+            // Độ dài
+            document.getElementById('textLength').textContent = text.length;
+            
+            // Đếm ký tự tiếng Việt
+            const vietnameseChars = text.match(/[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/gi);
+            document.getElementById('vietnameseCount').textContent = vietnameseChars ? vietnameseChars.length : 0;
+            
+            // Encoding
+            document.getElementById('encoding').textContent = 'UTF-8';
+        }
+
+        function testManualInput() {
+            const input = document.getElementById('manualInput').value;
+            const resultBox = document.getElementById('manualResult');
+            
+            if (!input.trim()) {
+                resultBox.textContent = 'Vui lòng nhập text!';
+                resultBox.classList.add('empty');
+                return;
+            }
+            
+            resultBox.textContent = 'Text đã nhập:\n\n' + input + '\n\n' + 
+                                   'Độ dài: ' + input.length + ' ký tự\n' +
+                                   'Có chứa tiếng Việt: ' + (hasVietnamese(input) ? 'Có ✅' : 'Không ❌');
+            resultBox.classList.remove('empty');
+        }
+
+        function hasVietnamese(text) {
+            return /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/i.test(text);
+        }
+
+        async function testEncoding(encoding) {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showStatus('Vui lòng chọn file TXT để test encoding!', 'error');
+                return;
+            }
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const decoder = new TextDecoder(encoding, { fatal: false });
+                const text = decoder.decode(arrayBuffer);
+                
+                const resultBox = document.getElementById('encodingResult');
+                resultBox.textContent = `Encoding: ${encoding}\n\n${text.substring(0, 500)}...`;
+                resultBox.classList.remove('empty');
+                
+                showStatus(`✅ Test encoding ${encoding} thành công!`, 'success');
+            } catch (error) {
+                showStatus(`❌ Lỗi encoding ${encoding}: ${error.message}`, 'error');
+            }
+        }
+
+        function clearResult() {
+            document.getElementById('result').textContent = 'Chưa có kết quả';
+            document.getElementById('result').classList.add('empty');
+            document.getElementById('textLength').textContent = '0';
+            document.getElementById('vietnameseCount').textContent = '0';
+            document.getElementById('encoding').textContent = '-';
+            document.getElementById('status').innerHTML = '';
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // Auto-test on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('✅ Test page loaded');
+            console.log('JSZip available:', typeof JSZip !== 'undefined');
+            
+            if (typeof JSZip === 'undefined') {
+                showStatus('⚠️ Cảnh báo: Thư viện JSZip chưa được load!', 'error');
+            } else {
+                showStatus('✅ Sẵn sàng test! Thư viện JSZip đã được load.', 'success');
+            }
+        });
+    </script>
+</body>
+</html>

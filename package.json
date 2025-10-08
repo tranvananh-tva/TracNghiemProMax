@@ -1,0 +1,16 @@
+{
+  "name": "quiz-management-system",
+  "version": "1.0.0",
+  "description": "Hệ thống trắc nghiệm tự động nhận diện và chấm điểm",
+  "main": "index.html",
+  "scripts": {
+    "dev": "http-server -p 3000 -c-1 --cors -a localhost",
+    "start": "http-server -p 8080 -c-1 --cors -a 0.0.0.0"
+  },
+  "dependencies": {
+    "http-server": "^14.1.1"
+  },
+  "keywords": ["quiz", "education", "vietnamese", "student"],
+  "author": "Your Name",
+  "license": "MIT"
+}

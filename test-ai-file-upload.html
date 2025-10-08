@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test AI File Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test AI File Upload Functionality</h1>
+    
+    <div class="test-section">
+        <h2>1. Kiểm tra các class đã load</h2>
+        <div id="class-check"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Kiểm tra các element HTML</h2>
+        <div id="element-check"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Kiểm tra khởi tạo</h2>
+        <div id="init-check"></div>
+        <button onclick="testInitialization()">Test Khởi Tạo</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Test Upload File</h2>
+        <input type="file" id="test-file-input" accept=".txt,.doc,.docx,.pdf">
+        <div id="upload-result"></div>
+    </div>
+
+    <!-- Load các script giống như index.html -->
+    <script src="script.js"></script>
+    <script src="ai-quiz.js"></script>
+    <script src="ai-file-handler.js"></script>
+    
+    <script>
+        // Test 1: Kiểm tra các class
+        function checkClasses() {
+            const classCheck = document.getElementById('class-check');
+            let html = '<ul>';
+            
+            html += `<li class="${typeof QuizManager !== 'undefined' ? 'success' : 'error'}">
+                QuizManager: ${typeof QuizManager !== 'undefined' ? '✓ Đã load' : '✗ Chưa load'}
+            </li>`;
+            
+            html += `<li class="${typeof AIQuizGenerator !== 'undefined' ? 'success' : 'error'}">
+                AIQuizGenerator: ${typeof AIQuizGenerator !== 'undefined' ? '✓ Đã load' : '✗ Chưa load'}
+            </li>`;
+            
+            html += `<li class="${typeof AIFileHandler !== 'undefined' ? 'success' : 'error'}">
+                AIFileHandler: ${typeof AIFileHandler !== 'undefined' ? '✓ Đã load' : '✗ Chưa load'}
+            </li>`;
+            
+            html += '</ul>';
+            classCheck.innerHTML = html;
+        }
+        
+        // Test 2: Kiểm tra các element
+        function checkElements() {
+            const elementCheck = document.getElementById('element-check');
+            const elements = [
+                'ai-file-input',
+                'select-file-btn',
+                'remove-file-btn',
+                'file-upload-area',
+                'ai-content-input'
+            ];
+            
+            let html = '<ul>';
+            elements.forEach(id => {
+                const exists = document.getElementById(id) !== null;
+                html += `<li class="${exists ? 'info' : 'error'}">
+                    #${id}: ${exists ? '✓ Tồn tại' : '✗ Không tồn tại (cần load index.html)'}
+                </li>`;
+            });
+            html += '</ul>';
+            elementCheck.innerHTML = html;
+        }
+        
+        // Test 3: Kiểm tra khởi tạo
+        function testInitialization() {
+            const initCheck = document.getElementById('init-check');
+            let html = '<ul>';
+            
+            // Kiểm tra quizManager
+            if (typeof quizManager !== 'undefined' && quizManager) {
+                html += `<li class="success">✓ quizManager đã được khởi tạo</li>`;
+                
+                // Kiểm tra aiGenerator
+                if (quizManager.aiGenerator) {
+                    html += `<li class="success">✓ quizManager.aiGenerator đã được khởi tạo</li>`;
+                    
+                    // Kiểm tra fileHandler
+                    if (quizManager.aiGenerator.fileHandler) {
+                        html += `<li class="success">✓ quizManager.aiGenerator.fileHandler đã được khởi tạo</li>`;
+                    } else {
+                        html += `<li class="error">✗ quizManager.aiGenerator.fileHandler chưa được khởi tạo</li>`;
+                    }
+                } else {
+                    html += `<li class="error">✗ quizManager.aiGenerator chưa được khởi tạo</li>`;
+                    html += `<li class="info">Thử gọi loadAISettings()...</li>`;
+                    
+                    if (typeof quizManager.loadAISettings === 'function') {
+                        quizManager.loadAISettings();
+                        html += `<li class="success">✓ Đã gọi loadAISettings()</li>`;
+                        
+                        setTimeout(() => {
+                            testInitialization();
+                        }, 200);
+                    } else {
+                        html += `<li class="error">✗ Method loadAISettings không tồn tại</li>`;
+                    }
+                }
+            } else {
+                html += `<li class="error">✗ quizManager chưa được khởi tạo</li>`;
+            }
+            
+            html += '</ul>';
+            initCheck.innerHTML = html;
+        }
+        
+        // Chạy test khi trang load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkClasses();
+            checkElements();
+            
+            setTimeout(() => {
+                testInitialization();
+            }, 500);
+        });
+        
+        // Test upload file
+        document.getElementById('test-file-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const result = document.getElementById('upload-result');
+            
+            if (file) {
+                result.innerHTML = `
+                    <p class="info">File đã chọn: ${file.name}</p>
+                    <p class="info">Kích thước: ${(file.size / 1024).toFixed(2)} KB</p>
+                    <p class="info">Loại: ${file.type || 'unknown'}</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
