@@ -1,0 +1,85 @@
+===================================================================
+KHẮC PHỤC LỖI: KHÔNG THỂ ẤN NÚT TẢI FILE LÊN TRONG PHẦN AI
+===================================================================
+
+VẤN ĐỀ:
+--------
+Người dùng không thể click vào nút "Chọn File" hoặc kéo thả file 
+trong phần "AI Tạo Quiz".
+
+NGUYÊN NHÂN:
+------------
+AIFileHandler chưa được khởi tạo vì QuizManager không gọi 
+loadAISettings() trong constructor.
+
+GIẢI PHÁP ĐÃ THỰC HIỆN:
+-----------------------
+
+1. SỬA FILE: script.js
+   - Thêm dòng gọi loadAISettings() trong constructor của QuizManager
+   - Dòng code thêm vào:
+     
+     setTimeout(() => {
+         this.loadAISettings();
+     }, 100);
+
+2. SỬA FILE: ai-file-handler.js
+   - Thêm console.log để debug
+   - Kiểm tra originalInit trước khi gọi
+   - Dòng code:
+     
+     if (originalInit) {
+         originalInit.call(this);
+     }
+     console.log('Initializing AIFileHandler...');
+     this.fileHandler = new AIFileHandler(this);
+     console.log('AIFileHandler initialized successfully');
+
+CÁCH KIỂM TRA:
+--------------
+
+1. Mở index.html trong trình duyệt
+2. Mở Developer Tools (F12) -> Console
+3. Kiểm tra có 2 dòng log:
+   - "Initializing AIFileHandler..."
+   - "AIFileHandler initialized successfully"
+
+4. Chuyển sang tab "AI Tạo Quiz"
+5. Thử click nút "Chọn File" -> Phải mở hộp thoại chọn file
+6. Thử kéo thả file vào vùng upload -> Phải nhận file
+
+KIỂM TRA NHANH TRONG CONSOLE:
+------------------------------
+Chạy lệnh sau trong Console:
+
+console.log('QuizManager:', quizManager);
+console.log('AI Generator:', quizManager.aiGenerator);
+console.log('File Handler:', quizManager.aiGenerator.fileHandler);
+
+Tất cả phải có giá trị (không undefined).
+
+TÍNH NĂNG UPLOAD FILE:
+-----------------------
+✓ Click nút "Chọn File"
+✓ Kéo thả file (Drag & Drop)
+✓ Click vào vùng upload
+✓ Hỗ trợ: .txt, .doc, .docx, .pdf
+✓ Giới hạn: 10MB
+
+FILE LIÊN QUAN:
+---------------
+- script.js (đã sửa)
+- ai-file-handler.js (đã sửa)
+- ai-quiz.js (không thay đổi)
+- index.html (không thay đổi)
+
+FILE TEST:
+----------
+- test-ai-file-upload.html (file test mới)
+- HUONG_DAN_KIEM_TRA_AI_FILE_UPLOAD.md (hướng dẫn chi tiết)
+
+TRẠNG THÁI:
+-----------
+✅ ĐÃ SỬA XONG - Sẵn sàng kiểm tra
+
+===================================================================

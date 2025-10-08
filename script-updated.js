@@ -83,22 +83,53 @@ function initUpdatedLayout() {
         });
     });
     
-    // Mobile sidebar
-    if (window.innerWidth <= 1024) {
-        sidebar.classList.add('collapsed');
-        
-        // Toggle sidebar on mobile
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-        });
-        
-        // Close sidebar when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
-                sidebar.classList.remove('open');
-            }
-        });
+    // Mobile sidebar handling
+    function handleMobileSidebar() {
+        if (window.innerWidth <= 1024) {
+            sidebar.classList.remove('collapsed');
+            
+            // Close sidebar by default on mobile
+            sidebar.classList.remove('open');
+            
+            // Toggle sidebar on mobile
+            sidebarToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle('open');
+            });
+            
+            // Close sidebar when clicking outside
+            document.addEventListener('click', (e) => {
+                if (sidebar.classList.contains('open') && 
+                    !sidebar.contains(e.target) && 
+                    !sidebarToggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
+            
+            // Close sidebar when clicking nav item on mobile
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    if (window.innerWidth <= 1024) {
+                        sidebar.classList.remove('open');
+                    }
+                });
+            });
+        } else {
+            // Desktop behavior
+            sidebar.classList.remove('open');
+        }
     }
+    
+    handleMobileSidebar();
+    
+    // Handle window resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            handleMobileSidebar();
+        }, 250);
+    });
     
     // Load home quiz grid
     loadHomeQuizGrid();
