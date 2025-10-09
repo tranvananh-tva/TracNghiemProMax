@@ -353,6 +353,10 @@ class QuizManager {
                             <i class="fas fa-edit"></i>
                             Sửa
                         </button>
+                        <button class="btn btn-sm btn-share-quiz" onclick="exploreQuizManager.shareQuiz('${quiz.id}')">
+                            <i class="fas fa-share-alt"></i>
+                            Chia sẻ
+                        </button>
                         <button class="btn btn-sm btn-secondary" onclick="quizManager.duplicateQuiz('${quiz.id}')">
                             <i class="fas fa-copy"></i>
                             Sao chép
@@ -691,6 +695,11 @@ class QuizManager {
         savedResults.push(this.currentResults);
         localStorage.setItem('quizResults', JSON.stringify(savedResults));
 
+        // Ghi nhận hoàn thành quiz cho streak tracking
+        if (typeof recordQuizCompletion === 'function') {
+            recordQuizCompletion();
+        }
+
         this.showToast('🎉 Đã nộp bài thành công!', 'success');
         this.switchTab('results');
         this.displayResults();
@@ -929,6 +938,13 @@ class QuizManager {
         URL.revokeObjectURL(url);
 
         this.showToast('💾 Xuất kết quả thành công!', 'success');
+    }
+
+    showStreakDetails() {
+        // Gọi hàm từ streak-tracker.js
+        if (typeof showStreakDetails === 'function') {
+            showStreakDetails();
+        }
     }
 }
 

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiểm Tra Kết Nối Firebase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .test-section {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .test-section h2 {
+            font-size: 18px;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .status.loading {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status.warning {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 3px solid currentColor;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .config-display {
+            background: #2d3748;
+            color: #68d391;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+
+        .config-display .key {
+            color: #90cdf4;
+        }
+
+        .config-display .value {
+            color: #fbd38d;
+        }
+
+        .info-box {
+            background: #e6fffa;
+            border-left: 4px solid #38b2ac;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .info-box strong {
+            color: #234e52;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .info-box p {
+            color: #2c7a7b;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .error-box {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .error-box strong {
+            color: #742a2a;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .error-box p {
+            color: #c53030;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .test-result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .test-result.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 2px solid #9ae6b4;
+        }
+
+        .test-result.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 2px solid #fc8181;
+        }
+
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        li {
+            margin: 5px 0;
+        }
+
+        .icon {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Kiểm Tra Kết Nối Firebase</h1>
+        <p class="subtitle">Công cụ kiểm tra cấu hình Firebase cho Trắc Nghiệm Pro</p>
+
+        <!-- Test 1: Firebase Config -->
+        <div class="test-section">
+            <h2><span class="icon">⚙️</span> 1. Kiểm Tra Cấu Hình Firebase</h2>
+            <div id="config-status" class="status loading">
+                <div class="spinner"></div>
+                <span>Đang kiểm tra...</span>
+            </div>
+            <div id="config-result"></div>
+        </div>
+
+        <!-- Test 2: Firebase Connection -->
+        <div class="test-section">
+            <h2><span class="icon">🌐</span> 2. Kiểm Tra Kết Nối Firebase</h2>
+            <div id="connection-status" class="status loading">
+                <div class="spinner"></div>
+                <span>Đang kết nối...</span>
+            </div>
+            <div id="connection-result"></div>
+        </div>
+
+        <!-- Test 3: Firestore Access -->
+        <div class="test-section">
+            <h2><span class="icon">📊</span> 3. Kiểm Tra Truy Cập Firestore</h2>
+            <div id="firestore-status" class="status loading">
+                <div class="spinner"></div>
+                <span>Đang kiểm tra...</span>
+            </div>
+            <div id="firestore-result"></div>
+            <button id="test-write-btn" class="btn" style="display: none;">
+                <span>🧪</span> Test Ghi Dữ Liệu
+            </button>
+        </div>
+
+        <!-- Test 4: Read/Write Test -->
+        <div class="test-section" id="rw-test-section" style="display: none;">
+            <h2><span class="icon">✍️</span> 4. Test Đọc/Ghi Dữ Liệu</h2>
+            <div id="rw-status"></div>
+            <div id="rw-result"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            getDocs,
+            query,
+            limit,
+            serverTimestamp 
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Import config từ firebase-config.js
+        let firebaseConfig;
+        let app;
+        let db;
+
+        // Test 1: Check Config
+        async function testConfig() {
+            try {
+                // Load config từ file
+                const configModule = await import('./firebase-config.js');
+                
+                // Lấy config từ code
+                const configScript = await fetch('./firebase-config.js');
+                const configText = await configScript.text();
+                
+                // Parse config
+                const configMatch = configText.match(/const firebaseConfig = ({[\s\S]*?});/);
+                if (!configMatch) {
+                    throw new Error('Không tìm thấy firebaseConfig trong file');
+                }
+
+                const configStr = configMatch[1];
+                firebaseConfig = eval('(' + configStr + ')');
+
+                // Validate config
+                const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+                const missingFields = requiredFields.filter(field => !firebaseConfig[field] || firebaseConfig[field].includes('YOUR_'));
+
+                if (missingFields.length > 0) {
+                    document.getElementById('config-status').className = 'status warning';
+                    document.getElementById('config-status').innerHTML = '<span>⚠️</span> Cấu hình chưa đầy đủ';
+                    
+                    document.getElementById('config-result').innerHTML = `
+                        <div class="error-box">
+                            <strong>❌ Các trường chưa được cấu hình:</strong>
+                            <ul>
+                                ${missingFields.map(field => `<li><code>${field}</code></li>`).join('')}
+                            </ul>
+                            <p><strong>Hướng dẫn:</strong> Vui lòng xem file <code>HUONG_DAN_TAO_FIREBASE_THUC_TE.md</code> để tạo Firebase project và lấy config đúng.</p>
+                        </div>
+                    `;
+                    return false;
+                }
+
+                // Validate API key format
+                if (!firebaseConfig.apiKey.startsWith('AIzaSy')) {
+                    document.getElementById('config-status').className = 'status warning';
+                    document.getElementById('config-status').innerHTML = '<span>⚠️</span> API Key có vẻ không đúng';
+                    
+                    document.getElementById('config-result').innerHTML = `
+                        <div class="error-box">
+                            <strong>⚠️ API Key không đúng định dạng</strong>
+                            <p>API Key của Firebase phải bắt đầu bằng <code>AIzaSy</code> và dài khoảng 39 ký tự.</p>
+                            <p><strong>API Key hiện tại:</strong> <code>${firebaseConfig.apiKey}</code></p>
+                            <p><strong>Hướng dẫn:</strong> Vui lòng kiểm tra lại config từ Firebase Console.</p>
+                        </div>
+                    `;
+                    return false;
+                }
+
+                document.getElementById('config-status').className = 'status success';
+                document.getElementById('config-status').innerHTML = '<span>✅</span> Cấu hình hợp lệ';
+                
+                document.getElementById('config-result').innerHTML = `
+                    <div class="info-box">
+                        <strong>✅ Firebase Config đã được cấu hình đúng!</strong>
+                        <p>Project ID: <code>${firebaseConfig.projectId}</code></p>
+                    </div>
+                    <div class="config-display">
+<span class="key">apiKey:</span> <span class="value">"${firebaseConfig.apiKey.substring(0, 20)}..."</span><br>
+<span class="key">authDomain:</span> <span class="value">"${firebaseConfig.authDomain}"</span><br>
+<span class="key">projectId:</span> <span class="value">"${firebaseConfig.projectId}"</span><br>
+<span class="key">storageBucket:</span> <span class="value">"${firebaseConfig.storageBucket}"</span>
+                    </div>
+                `;
+                return true;
+            } catch (error) {
+                document.getElementById('config-status').className = 'status error';
+                document.getElementById('config-status').innerHTML = '<span>❌</span> Lỗi cấu hình';
+                
+                document.getElementById('config-result').innerHTML = `
+                    <div class="error-box">
+                        <strong>❌ Lỗi khi đọc cấu hình</strong>
+                        <p>${error.message}</p>
+                        <p><strong>Hướng dẫn:</strong> Kiểm tra file <code>firebase-config.js</code> có tồn tại và đúng cú pháp không.</p>
+                    </div>
+                `;
+                return false;
+            }
+        }
+
+        // Test 2: Check Connection
+        async function testConnection() {
+            try {
+                if (!firebaseConfig) {
+                    throw new Error('Config chưa được load');
+                }
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+
+                document.getElementById('connection-status').className = 'status success';
+                document.getElementById('connection-status').innerHTML = '<span>✅</span> Kết nối thành công';
+                
+                document.getElementById('connection-result').innerHTML = `
+                    <div class="info-box">
+                        <strong>✅ Đã kết nối Firebase thành công!</strong>
+                        <p>Firebase SDK đã được khởi tạo và sẵn sàng sử dụng.</p>
+                    </div>
+                `;
+                return true;
+            } catch (error) {
+                document.getElementById('connection-status').className = 'status error';
+                document.getElementById('connection-status').innerHTML = '<span>❌</span> Kết nối thất bại';
+                
+                document.getElementById('connection-result').innerHTML = `
+                    <div class="error-box">
+                        <strong>❌ Không thể kết nối Firebase</strong>
+                        <p>${error.message}</p>
+                        <p><strong>Nguyên nhân có thể:</strong></p>
+                        <ul>
+                            <li>Config không đúng</li>
+                            <li>Project chưa được tạo trên Firebase Console</li>
+                            <li>Không có kết nối Internet</li>
+                        </ul>
+                    </div>
+                `;
+                return false;
+            }
+        }
+
+        // Test 3: Check Firestore Access
+        async function testFirestoreAccess() {
+            try {
+                if (!db) {
+                    throw new Error('Firestore chưa được khởi tạo');
+                }
+
+                // Try to read from collection
+                const q = query(collection(db, 'shared-quizzes'), limit(1));
+                const querySnapshot = await getDocs(q);
+
+                document.getElementById('firestore-status').className = 'status success';
+                document.getElementById('firestore-status').innerHTML = '<span>✅</span> Truy cập Firestore thành công';
+                
+                const count = querySnapshot.size;
+                document.getElementById('firestore-result').innerHTML = `
+                    <div class="info-box">
+                        <strong>✅ Firestore đang hoạt động!</strong>
+                        <p>Đã tìm thấy <strong>${count}</strong> quiz trong database.</p>
+                        <p>Rules đã được cấu hình đúng, cho phép đọc dữ liệu.</p>
+                    </div>
+                `;
+
+                document.getElementById('test-write-btn').style.display = 'inline-flex';
+                return true;
+            } catch (error) {
+                document.getElementById('firestore-status').className = 'status error';
+                document.getElementById('firestore-status').innerHTML = '<span>❌</span> Không thể truy cập Firestore';
+                
+                let errorMsg = error.message;
+                let suggestions = [];
+
+                if (error.code === 'permission-denied') {
+                    suggestions = [
+                        'Firestore Rules chưa được cấu hình đúng',
+                        'Vào Firebase Console → Firestore Database → Rules',
+                        'Thay đổi rules để cho phép đọc/ghi (xem HUONG_DAN_TAO_FIREBASE_THUC_TE.md)',
+                        'Click "Publish" để áp dụng rules mới'
+                    ];
+                } else if (error.code === 'unavailable') {
+                    suggestions = [
+                        'Firestore chưa được enable',
+                        'Vào Firebase Console → Firestore Database',
+                        'Click "Create database"',
+                        'Chọn "Start in test mode"'
+                    ];
+                } else {
+                    suggestions = [
+                        'Kiểm tra kết nối Internet',
+                        'Kiểm tra Firestore đã được enable chưa',
+                        'Kiểm tra Rules đã được cấu hình chưa'
+                    ];
+                }
+
+                document.getElementById('firestore-result').innerHTML = `
+                    <div class="error-box">
+                        <strong>❌ Lỗi truy cập Firestore</strong>
+                        <p><strong>Lỗi:</strong> ${errorMsg}</p>
+                        <p><strong>Hướng dẫn khắc phục:</strong></p>
+                        <ul>
+                            ${suggestions.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                return false;
+            }
+        }
+
+        // Test 4: Test Write
+        async function testWrite() {
+            const rwSection = document.getElementById('rw-test-section');
+            rwSection.style.display = 'block';
+
+            const statusDiv = document.getElementById('rw-status');
+            statusDiv.innerHTML = '<div class="status loading"><div class="spinner"></div><span>Đang test ghi dữ liệu...</span></div>';
+
+            try {
+                // Try to write a test document
+                const testData = {
+                    title: 'Test Quiz - ' + new Date().toLocaleString('vi-VN'),
+                    description: 'Đây là quiz test để kiểm tra kết nối Firebase',
+                    questions: [
+                        {
+                            question: 'Câu hỏi test',
+                            options: ['A', 'B', 'C', 'D'],
+                            correctAnswer: 0
+                        }
+                    ],
+                    totalQuestions: 1,
+                    userName: 'Test User',
+                    sharedAt: serverTimestamp(),
+                    views: 0,
+                    attempts: 0,
+                    isTest: true
+                };
+
+                const docRef = await addDoc(collection(db, 'shared-quizzes'), testData);
+
+                statusDiv.innerHTML = '<div class="status success"><span>✅</span> Test ghi dữ liệu thành công</div>';
+                
+                document.getElementById('rw-result').innerHTML = `
+                    <div class="test-result success">
+                        <strong>🎉 Hoàn hảo! Hệ thống hoạt động 100%</strong>
+                        <p>✅ Đã ghi thành công quiz test vào Firestore</p>
+                        <p>✅ Document ID: <code>${docRef.id}</code></p>
+                        <p><strong>Kết luận:</strong> Firebase đã được cấu hình đúng và sẵn sàng sử dụng!</p>
+                        <p><strong>Bây giờ bạn có thể:</strong></p>
+                        <ul>
+                            <li>Chia sẻ quiz từ bất kỳ thiết bị nào</li>
+                            <li>Xem quiz từ bất kỳ thiết bị nào</li>
+                            <li>Không cần cấu hình thêm gì</li>
+                        </ul>
+                    </div>
+                `;
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error"><span>❌</span> Test ghi dữ liệu thất bại</div>';
+                
+                let errorMsg = error.message;
+                let suggestions = [];
+
+                if (error.code === 'permission-denied') {
+                    suggestions = [
+                        'Firestore Rules chưa cho phép ghi dữ liệu',
+                        'Vào Firebase Console → Firestore Database → Rules',
+                        'Thêm rule: <code>allow write: if true;</code> cho collection shared-quizzes',
+                        'Click "Publish" để áp dụng'
+                    ];
+                } else {
+                    suggestions = [
+                        'Kiểm tra kết nối Internet',
+                        'Thử lại sau vài giây',
+                        'Kiểm tra Firebase Console có báo lỗi gì không'
+                    ];
+                }
+
+                document.getElementById('rw-result').innerHTML = `
+                    <div class="test-result error">
+                        <strong>❌ Không thể ghi dữ li���u</strong>
+                        <p><strong>Lỗi:</strong> ${errorMsg}</p>
+                        <p><strong>Hướng dẫn khắc phục:</strong></p>
+                        <ul>
+                            ${suggestions.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        // Run tests
+        async function runTests() {
+            const configOk = await testConfig();
+            if (!configOk) return;
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const connectionOk = await testConnection();
+            if (!connectionOk) return;
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testFirestoreAccess();
+        }
+
+        // Event listeners
+        document.getElementById('test-write-btn').addEventListener('click', testWrite);
+
+        // Start tests
+        runTests();
+    </script>
+</body>
+</html>

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuizTva Studio - Hệ Thống Trắc Nghiệm Thông Minh</title>
+    <link rel="icon" type="image/png" href="logo/logo.png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style-modern-quiz.css">
     <link rel="stylesheet" href="style-updated.css">
@@ -12,6 +13,8 @@
     <link rel="stylesheet" href="style-responsive-enhanced.css">
     <link rel="stylesheet" href="style-mobile-enhanced.css">
     <link rel="stylesheet" href="style-mobile-optimized.css">
+    <link rel="stylesheet" href="style-streak.css">
+    <link rel="stylesheet" href="style-explore.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- JSZip library for reading Word files -->
@@ -69,6 +72,10 @@
                             <i class="fas fa-robot"></i>
                             <span>AI Tạo Quiz</span>
                         </a>
+                        <a href="#" class="nav-item" data-tab="explore">
+                            <i class="fas fa-compass"></i>
+                            <span>Khám Phá Đề Thi</span>
+                        </a>
                         <a href="#" class="nav-item" data-tab="manage">
                             <i class="fas fa-list"></i>
                             <span>Quản Lý Quiz</span>
@@ -125,7 +132,7 @@
                     </button>
                     <div class="user-menu">
                         <div class="user-avatar-small">
-                            <i class="fas fa-user"></i>
+                            <img src="logo/logo.png" alt="User Avatar" class="user-avatar-image">
                         </div>
                     </div>
                 </div>
@@ -170,13 +177,14 @@
                                 </div>
                             </div>
 
-                            <div class="stat-card">
+                            <div class="stat-card streak-card" onclick="quizManager.showStreakDetails()">
                                 <div class="stat-icon red">
                                     <i class="fas fa-fire"></i>
                                 </div>
                                 <div class="stat-content">
                                     <div class="stat-label">Chuỗi ngày học</div>
-                                    <div class="stat-value">0</div>
+                                    <div class="stat-value" id="streak-days">0</div>
+                                    <div class="stat-sublabel" id="streak-message">Bắt đầu học hôm nay!</div>
                                 </div>
                             </div>
                         </div>
@@ -441,6 +449,65 @@
                     </div>
                 </section>
 
+                <!-- Explore Tab -->
+                <section id="explore-tab" class="tab-content">
+                    <div class="page-header">
+                        <h2 class="page-title">
+                            <i class="fas fa-compass"></i>
+                            Khám Phá Đề Thi
+                        </h2>
+                        <p style="margin-top: 10px; opacity: 0.9;">
+                            Khám phá và làm bài các đề thi được chia sẻ bởi cộng đồng
+                        </p>
+                    </div>
+
+                    <!-- User Name Section -->
+                    <div class="user-name-section">
+                        <label>
+                            <i class="fas fa-user-circle"></i>
+                            Tên của bạn (để chia sẻ đề thi)
+                        </label>
+                        <input type="text" 
+                               id="user-name-input" 
+                               placeholder="Nhập tên của bạn..." 
+                               class="form-input">
+                        <small>Tên này sẽ hiển thị khi bạn chia sẻ đề thi</small>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <div class="explore-header">
+                        <div class="explore-search-bar">
+                            <input type="text" 
+                                   id="search-shared-quiz" 
+                                   placeholder="Tìm kiếm đề thi theo tên, mô tả, người tạo..." 
+                                   class="explore-search-input">
+                            <button class="btn-search" id="search-shared-quiz-btn">
+                                <i class="fas fa-search"></i>
+                                Tìm kiếm
+                            </button>
+                        </div>
+                        <button class="btn-refresh" id="refresh-shared-quizzes">
+                            <i class="fas fa-sync-alt"></i>
+                            Làm mới
+                        </button>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="explore-loading" class="explore-loading">
+                        <div class="explore-loading-spinner"></div>
+                        <div class="explore-loading-text">Đang tải đề thi...</div>
+                    </div>
+
+                    <!-- Shared Quizzes Grid -->
+                    <div class="shared-quizzes-grid" id="shared-quizzes-grid">
+                        <div class="empty-state-card">
+                            <i class="fas fa-compass"></i>
+                            <h3>Đang tải đề thi...</h3>
+                            <p>Vui lòng đợi trong giây lát</p>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Manage Tab -->
                 <section id="manage-tab" class="tab-content">
                     <div class="page-header">
@@ -548,12 +615,121 @@
         </div>
     </div>
 
+    <!-- Modal for quiz details -->
+    <div id="quiz-details-modal" class="modal">
+        <div class="quiz-details-modal-content modal-content">
+            <div class="quiz-details-content">
+                <!-- Content will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for sharing quiz -->
+    <div id="share-quiz-modal" class="modal">
+        <div class="modal-overlay" onclick="exploreQuizManager.closeShareModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-share-alt"></i> Chia Sẻ Đề Thi</h3>
+                <button class="modal-close" onclick="exploreQuizManager.closeShareModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="share-info-banner">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Lưu ý:</strong> Bạn có thể đặt tên và mô tả mới cho bài chia sẻ. 
+                        Bài gốc của bạn sẽ không bị thay đổi.
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>
+                        <i class="fas fa-user-circle"></i>
+                        Tên của bạn <span style="color: red;">*</span>
+                    </label>
+                    <input type="text" 
+                           id="share-user-name" 
+                           placeholder="Nhập tên của bạn..." 
+                           class="modal-input">
+                    <small style="display: block; margin-top: 5px; color: var(--text-secondary);">
+                        Tên này sẽ hiển thị cho mọi người biết ai đã chia sẻ
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-heading"></i>
+                        Tên đề thi <span style="color: red;">*</span>
+                    </label>
+                    <input type="text" 
+                           id="share-quiz-title" 
+                           placeholder="Nhập tên đề thi..." 
+                           class="modal-input">
+                    <small style="display: block; margin-top: 5px; color: var(--text-secondary);">
+                        Đặt tên mới cho đề thi khi chia sẻ (khác với tên gốc)
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-align-left"></i>
+                        Mô tả đề thi
+                    </label>
+                    <textarea id="share-quiz-description" 
+                              placeholder="Nhập mô tả cho đề thi..." 
+                              class="modal-textarea"
+                              rows="4"></textarea>
+                    <small style="display: block; margin-top: 5px; color: var(--text-secondary);">
+                        Mô tả ngắn gọn về nội dung đề thi
+                    </small>
+                </div>
+
+                <div class="share-quiz-info">
+                    <div class="info-item">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Số câu hỏi: <strong id="share-quiz-count">0</strong></span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Ngày chia sẻ: <strong id="share-quiz-date">Hôm nay</strong></span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Thời gian: <strong id="share-quiz-time">Bây giờ</strong></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="exploreQuizManager.confirmShareQuiz()">
+                    <i class="fas fa-share-alt"></i>
+                    Chia Sẻ Ngay
+                </button>
+                <button class="btn-secondary" onclick="exploreQuizManager.closeShareModal()">
+                    <i class="fas fa-times"></i>
+                    Hủy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="cloud-storage.js"></script>
+    <script>
+        window.firebaseQuizManager = new CloudQuizManager();
+        window.isFirebaseInitialized = true;
+        window.firebaseQuizManager.startAutoSync();
+        console.log('✅ Cloud storage ready');
+    </script>
+
+    <!-- Community Sharing - Không cần server, không cần cùng mạng -->
+    <script src="community-share.js"></script>
+
     <script src="script.js"></script>
     <script src="script-modern.js"></script>
     <script src="script-updated.js"></script>
     <script src="ai-quiz.js"></script>
     <script src="ai-file-handler.js"></script>
     <script src="mobile-menu.js"></script>
+    <script src="streak-tracker.js"></script>
+    <script src="explore-quiz.js"></script>
     <script>
         // Override renderQuiz with modern version for 3-column layout
         document.addEventListener('DOMContentLoaded', function() {

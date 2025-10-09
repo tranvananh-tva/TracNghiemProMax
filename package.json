@@ -5,10 +5,13 @@
   "main": "index.html",
   "scripts": {
     "dev": "http-server -p 3000 -c-1 --cors -a localhost",
-    "start": "http-server -p 8080 -c-1 --cors -a 0.0.0.0"
+    "start": "http-server -p 8080 -c-1 --cors -a 0.0.0.0",
+    "server": "node server.js"
   },
   "dependencies": {
-    "http-server": "^14.1.1"
+    "http-server": "^14.1.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
   },
   "keywords": ["quiz", "education", "vietnamese", "student"],
   "author": "Your Name",

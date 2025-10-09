@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Share Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Chức Năng Chia Sẻ Quiz</h1>
+
+    <div class="test-section">
+        <h2>1. Kiểm tra Server</h2>
+        <button onclick="testServer()">Test Server Connection</button>
+        <div id="server-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Tạo Quiz Mẫu</h2>
+        <button onclick="createSampleQuiz()">Tạo Quiz Mẫu</button>
+        <div id="create-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Chia Sẻ Quiz</h2>
+        <button onclick="shareQuiz()">Chia Sẻ Quiz</button>
+        <div id="share-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Lấy Danh Sách Quiz Đã Chia Sẻ</h2>
+        <button onclick="getSharedQuizzes()">Lấy Danh Sách</button>
+        <div id="list-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+        let sampleQuizId = null;
+
+        // Test server connection
+        async function testServer() {
+            const resultDiv = document.getElementById('server-result');
+            resultDiv.textContent = 'Đang kiểm tra...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/shared-quizzes`);
+                const data = await response.json();
+                
+                if (data.success !== undefined) {
+                    resultDiv.textContent = '✅ Server đang chạy!\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = '❌ Server phản hồi không đúng format';
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ Không thể kết nối server!\n' + 
+                    'Lỗi: ' + error.message + '\n\n' +
+                    'Hãy chạy: npm run server';
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Create sample quiz
+        function createSampleQuiz() {
+            const resultDiv = document.getElementById('create-result');
+            
+            const sampleQuiz = {
+                id: Date.now().toString(),
+                title: 'Quiz Test - ' + new Date().toLocaleTimeString('vi-VN'),
+                description: 'Đây là quiz test để kiểm tra chức năng chia sẻ',
+                questions: [
+                    {
+                        question: 'Câu hỏi test 1?',
+                        options: [
+                            { letter: 'A', text: 'Đáp án A' },
+                            { letter: 'B', text: 'Đáp án B' },
+                            { letter: 'C', text: 'Đáp án C' },
+                            { letter: 'D', text: 'Đáp án D' }
+                        ],
+                        correctAnswer: 'B'
+                    },
+                    {
+                        question: 'Câu hỏi test 2?',
+                        options: [
+                            { letter: 'A', text: 'Đáp án A' },
+                            { letter: 'B', text: 'Đáp án B' },
+                            { letter: 'C', text: 'Đáp án C' },
+                            { letter: 'D', text: 'Đáp án D' }
+                        ],
+                        correctAnswer: 'A'
+                    }
+                ],
+                totalQuestions: 2,
+                createdAt: new Date().toISOString()
+            };
+
+            // Save to localStorage
+            let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
+            quizzes.push(sampleQuiz);
+            localStorage.setItem('quizzes', JSON.stringify(quizzes));
+            
+            sampleQuizId = sampleQuiz.id;
+
+            resultDiv.textContent = '✅ Đã tạo quiz mẫu!\n' + JSON.stringify(sampleQuiz, null, 2);
+            resultDiv.className = 'result success';
+        }
+
+        // Share quiz
+        async function shareQuiz() {
+            const resultDiv = document.getElementById('share-result');
+            
+            if (!sampleQuizId) {
+                resultDiv.textContent = '❌ Vui lòng tạo quiz mẫu trước!';
+                resultDiv.className = 'result error';
+                return;
+            }
+
+            resultDiv.textContent = 'Đang chia sẻ...';
+            resultDiv.className = 'result';
+
+            const quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
+            const quiz = quizzes.find(q => q.id === sampleQuizId);
+
+            if (!quiz) {
+                resultDiv.textContent = '❌ Không tìm thấy quiz!';
+                resultDiv.className = 'result error';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/shared-quizzes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        quiz: {
+                            ...quiz,
+                            title: 'Quiz Được Chia Sẻ - ' + new Date().toLocaleTimeString('vi-VN'),
+                            description: 'Mô tả mới cho quiz được chia sẻ'
+                        },
+                        userName: 'Test User'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.textContent = '✅ Chia sẻ thành công!\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = '❌ Chia sẻ thất bại!\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ Lỗi khi chia sẻ!\n' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Get shared quizzes
+        async function getSharedQuizzes() {
+            const resultDiv = document.getElementById('list-result');
+            resultDiv.textContent = 'Đang tải...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/shared-quizzes`);
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.textContent = '✅ Danh sách quiz đã chia sẻ:\n' + 
+                        JSON.stringify(data.quizzes, null, 2);
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = '❌ Không thể tải danh sách!';
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ Lỗi khi tải danh sách!\n' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Auto test on load
+        window.addEventListener('load', () => {
+            console.log('Test page loaded');
+            testServer();
+        });
+    </script>
+</body>
+</html>
