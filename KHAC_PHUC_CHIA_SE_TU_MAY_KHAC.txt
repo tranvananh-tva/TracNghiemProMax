@@ -1,0 +1,265 @@
+═══════════════════════════════════════════════════════════════════
+  KHẮC PHỤC: NGƯỜI DÙNG KHÁC IP KHÁC KHÔNG XEM ĐƯỢC CHIA SẺ BÀI LÀM
+═══════════════════════════════════════════════════════════════════
+
+📋 VẤN ĐỀ:
+-----------
+Người dùng từ máy khác (IP khác) không thể xem được bài làm được chia sẻ
+từ máy chủ.
+
+✅ GIẢI PHÁP NHANH:
+-------------------
+
+🔥 PHƯƠNG ÁN 1: FIREBASE (KHUYẾN NGHỊ - DỄ NHẤT)
+================================================
+
+Ưu điểm:
+✓ Chia sẻ qua Internet, không cần cấu hình mạng
+✓ Truy cập từ bất kỳ đâu
+✓ Không cần khởi động server
+✓ Miễn phí (có gi���i hạn)
+
+Các bước:
+---------
+1. Tạo Firebase Project:
+   → Truy cập: https://console.firebase.google.com/
+   → Click "Add project"
+   → Đặt tên project (ví dụ: TracNghiemPro)
+   → Tắt Google Analytics
+   → Click "Create project"
+
+2. Tạo Firestore Database:
+   → Chọn "Firestore Database"
+   → Click "Create database"
+   → Chọn "Start in test mode"
+   → Chọn location: asia-southeast1
+   → Click "Enable"
+
+3. Lấy Firebase Config:
+   → Vào Project Settings (biểu tượng bánh răng)
+   → Scroll xuống "Your apps"
+   → Click biểu tượng Web (</>)
+   → Đặt tên app: TracNghiemProWeb
+   → Copy đoạn firebaseConfig
+
+4. Cập Nhật File firebase-config.js:
+   → Mở file: firebase-config.js
+   → Tìm dòng: const firebaseConfig = {
+   → Thay thế bằng config vừa copy
+
+   VÍ DỤ:
+   const firebaseConfig = {
+       apiKey: "AIzaSyC1234567890abcdefghijklmnop",
+       authDomain: "tracnghiempro-12345.firebaseapp.com",
+       projectId: "tracnghiempro-12345",
+       storageBucket: "tracnghiempro-12345.appspot.com",
+       messagingSenderId: "123456789012",
+       appId: "1:123456789012:web:abcdef1234567890"
+   };
+
+5. Kiểm Tra:
+   → Mở ứng dụng trong trình duyệt
+   → Mở Console (F12)
+   → Xem có dòng: �� Firebase initialized successfully
+   → Thử chia sẻ một bài quiz
+   → Mở từ máy khác và kiểm tra
+
+═══════════════════════════════════════════════════════════════════
+
+🏠 PHƯƠNG ÁN 2: LOCAL SERVER (TRONG MẠNG LAN)
+==============================================
+
+Ưu điểm:
+✓ Tốc độ nhanh
+✓ Không cần Internet
+✓ Miễn phí hoàn toàn
+
+Nhược điểm:
+✗ Chỉ dùng trong mạng nội bộ
+✗ Cần cấu hình mạng
+
+A. TRÊN MÁY CHỦ (Host - Máy Chia Sẻ Bài):
+------------------------------------------
+
+Bước 1: Khởi Động Server
+   Cách 1: Double-click file: start-server.bat
+   Cách 2: Mở Terminal và chạy: npm run server
+
+Bước 2: Lấy Địa Chỉ IP
+   → Server sẽ hiển thị IP trong console:
+     Network: http://192.168.1.100:3000  ← Copy địa chỉ này
+   
+   → Hoặc tìm thủ công:
+     Windows: Mở CMD và chạy: ipconfig
+     Tìm dòng "IPv4 Address" trong "Wireless LAN adapter Wi-Fi"
+     Ví dụ: 192.168.1.100
+
+Bước 3: Cấu Hình Firewall (QUAN TRỌNG!)
+   Windows:
+   → Mở CMD as Administrator
+   → Chạy lệnh:
+     netsh advfirewall firewall add rule name="TracNghiemPro" dir=in action=allow protocol=TCP localport=3000
+   
+   → Hoặc tắt tạm thời Windows Firewall để test
+
+Bước 4: Chia Sẻ IP
+   → Gửi địa chỉ IP cho người dùng khác:
+     http://192.168.1.100:3000
+
+B. TRÊN MÁY KHÁCH (Client - Máy Xem Bài):
+------------------------------------------
+
+Bước 1: Lấy Địa Chỉ IP Từ Máy Chủ
+   → Hỏi người quản lý máy chủ
+   → Ví dụ: http://192.168.1.100:3000
+
+Bước 2: Cấu Hình Server URL
+   → Mở ứng dụng
+   → Vào tab "Khám Phá Đề Thi"
+   → Click nút "Cấu Hình Server" (biểu tượng ⚙️)
+   
+   Cách 1: Tự Động Tìm
+   → Click "Tự Động Tìm"
+   → Đợi hệ thống tìm server trong mạng
+   
+   Cách 2: Nhập Thủ Công
+   → Nhập địa chỉ: http://192.168.1.100:3000
+   → Click "Kiểm Tra & Lưu"
+
+Bước 3: Kiểm Tra Kết Nối
+   → Nếu thành công: ✅ "Kết nối thành công!"
+   → Nếu thất bại: Xem phần "Khắc Phục Sự Cố" bên dưới
+
+═══════════════════════════════════════════════════════════════════
+
+🔧 KHẮC PHỤC SỰ CỐ:
+====================
+
+❌ Lỗi: "Không thể kết nối server"
+-----------------------------------
+
+1. Server chưa chạy
+   ✅ Khởi động server trên máy chủ: npm run server
+
+2. Firewall chặn kết nối
+   ✅ Tắt tạm thời firewall để test
+   ✅ Thêm rule cho port 3000 (xem Bước 3 phía trên)
+
+3. IP không đúng
+   ✅ Kiểm tra lại IP của máy chủ: ipconfig
+   ✅ Đảm bảo cả 2 máy cùng mạng WiFi/LAN
+
+4. Port bị chiếm dụng
+   ✅ Thay đổi port trong server.js:
+      const PORT = process.env.PORT || 3001;
+
+5. Antivirus chặn
+   ✅ Tạm thời tắt antivirus để test
+   ✅ Thêm exception cho Node.js
+
+6. Không cùng mạng
+   ✅ Đảm bảo cả 2 máy kết nối cùng WiFi/Router
+
+❌ Lỗi: "Firebase không khả dụng"
+----------------------------------
+
+1. Chưa cấu hình Firebase
+   ✅ Làm theo Phương Án 1 phía trên
+
+2. Config sai
+   ✅ Kiểm tra lại các giá trị trong firebaseConfig
+   ✅ Đảm bảo không có dấu ngoặc kép thừa
+
+3. Firestore chưa được enable
+   ✅ Vào Firebase Console → Firestore Database → Create database
+
+4. Rules quá strict
+   ✅ Vào Firestore → Rules → Đổi thành test mode
+
+═══════════════════════════════════════════════════════════════════
+
+📊 SO SÁNH 2 PHƯƠNG ÁN:
+========================
+
+                    | Firebase      | Local Server
+--------------------|---------------|---------------
+Dễ cài đặt          | ⭐⭐⭐⭐⭐    | ⭐⭐⭐
+Truy cập từ xa      | ✅ Có         | ❌ Không
+Tốc độ              | ⭐⭐⭐⭐      | ⭐⭐⭐⭐⭐
+Chi phí             | Miễn phí*     | Miễn phí
+Bảo mật             | ⭐⭐⭐⭐⭐    | ⭐⭐⭐
+Cần cấu hình mạng   | ❌ Không      | ✅ Có
+
+* Firebase miễn phí có giới hạn
+
+KHUYẾN NGHỊ:
+🏆 Firebase: Nếu muốn chia sẻ qua Internet, dễ dàng
+🏠 Local Server: Nếu chỉ dùng trong mạng nội bộ, tốc độ cao
+
+═══════════════════════════════════════════════════════════════════
+
+✅ CHECKLIST HOÀN THÀNH:
+=========================
+
+PHƯƠNG ÁN 1: FIREBASE
+□ Tạo Firebase project
+□ Enable Firestore Database
+□ Lấy Firebase config
+□ Cập nhật firebase-config.js
+□ Test chia sẻ từ máy chủ
+□ Test xem từ máy khác
+
+PHƯƠNG ÁN 2: LOCAL SERVER
+□ Khởi động server trên máy chủ
+□ Lấy địa chỉ IP của máy chủ
+□ Cấu hình firewall
+□ Cấu hình server URL trên máy client
+□ Test kết nối
+□ Test chia sẻ và xem bài
+
+═══════════════════════════════════════════════════════════════════
+
+💡 TIPS & TRICKS:
+=================
+
+1. Dùng cả 2 phương án: Firebase làm primary, Local Server làm backup
+
+2. QR Code: Tạo QR code chứa server URL để chia sẻ nhanh
+
+3. Bookmark: Lưu URL với server IP để truy cập nhanh
+
+4. Static IP: Cấu hình static IP cho máy chủ để không phải đổi config
+
+5. Port Forwarding: Nếu muốn truy cập từ Internet, cấu hình port 
+   forwarding trên router (nâng cao)
+
+═══════════════════════════════════════════════════════════════════
+
+📞 HỖ TRỢ:
+==========
+
+Nếu vẫn gặp vấn đề, hãy kiểm tra:
+1. Console log (F12) để xem lỗi chi tiết
+2. Server log để xem request có đến không
+3. Network tab để xem request/response
+
+Các lỗi phổ biến:
+• ERR_CONNECTION_REFUSED: Server chưa chạy hoặc firewall chặn
+• ERR_NAME_NOT_RESOLVED: IP/domain không đúng
+• CORS error: Server chưa enable CORS (đã fix trong code)
+• Firebase not initialized: Chưa cấu hình Firebase đúng
+
+═══════════════════════════════════════════════════════════════════
+
+📚 TÀI LIỆU THAM KHẢO:
+======================
+
+• HUONG_DAN_CHIA_SE_TU_MAY_KHAC.md - Hướng dẫn chi tiết
+• HUONG_DAN_CAI_DAT_FIREBASE.md - Hướng dẫn Firebase
+• HUONG_DAN_CHIA_SE_MANG.md - Hướng dẫn chia sẻ mạng
+
+═══════════════════════════════════════════════════════════════════
+
+Chúc bạn thành công! 🎉
+
+Nếu cần hỗ trợ thêm, vui lòng mở Console (F12) và gửi log lỗi.
