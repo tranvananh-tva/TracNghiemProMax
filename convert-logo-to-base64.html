@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuyển Logo sang Base64</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8e9ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .upload-hint {
+            color: #666;
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .preview-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 15px;
+        }
+
+        .preview-section.show {
+            display: block;
+        }
+
+        .preview-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .preview-img {
+            max-width: 200px;
+            max-height: 200px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+            background: white;
+            display: block;
+            margin: 0 auto 20px;
+        }
+
+        .result-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .code-block {
+            margin-bottom: 25px;
+        }
+
+        .code-title {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .success-message.show {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .instructions {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .file-info {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .file-info-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-info-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .file-info-value {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Chuyển Logo sang Base64</h1>
+        <p class="subtitle">Chuyển đổi logo.png thành mã Base64 để nhúng trực tiếp vào HTML</p>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Kéo thả file logo.png vào đây</div>
+            <div class="upload-hint">hoặc click để chọn file</div>
+            <input type="file" id="logoInput" accept="image/*">
+        </div>
+
+        <div class="file-info" id="fileInfo">
+            <div class="file-info-item">
+                <span class="file-info-label">Tên file:</span>
+                <span class="file-info-value" id="fileName"></span>
+            </div>
+            <div class="file-info-item">
+                <span class="file-info-label">Kích thước:</span>
+                <span class="file-info-value" id="fileSize"></span>
+            </div>
+            <div class="file-info-item">
+                <span class="file-info-label">Loại:</span>
+                <span class="file-info-value" id="fileType"></span>
+            </div>
+        </div>
+
+        <div class="preview-section" id="previewSection">
+            <div class="preview-title">✅ Xem trước logo:</div>
+            <img id="previewImg" class="preview-img" alt="Preview">
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <div class="code-block">
+                <div class="code-title">
+                    <span>📋 Mã Base64 (dùng để nhúng vào HTML)</span>
+                </div>
+                <textarea id="base64Output" rows="6" readonly></textarea>
+                <div class="btn-group">
+                    <button class="btn" onclick="copyBase64()">
+                        📋 Copy mã Base64
+                    </button>
+                </div>
+                <div class="success-message" id="successBase64">
+                    ✅ Đã copy mã Base64!
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-title">
+                    <span>🔧 Code HTML để thay thế (Copy và dán vào index.html)</span>
+                </div>
+                <textarea id="htmlOutput" rows="10" readonly></textarea>
+                <div class="btn-group">
+                    <button class="btn" onclick="copyHTML()">
+                        📋 Copy code HTML
+                    </button>
+                </div>
+                <div class="success-message" id="successHTML">
+                    ✅ Đã copy code HTML!
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>📖 Hướng dẫn sử dụng:</h3>
+            <ol>
+                <li><strong>Chọn file logo.png</strong> từ thư mục logo/ của bạn</li>
+                <li><strong>Copy code HTML</strong> bằng cách click nút "Copy code HTML"</li>
+                <li><strong>Mở file index.html</strong> và tìm 2 dòng sau:
+                    <ul style="margin-top: 10px;">
+                        <li><code>&lt;link rel="icon" type="image/png" href="logo/logo.png"&gt;</code></li>
+                        <li><code>&lt;img src="logo/logo.png" alt="User Avatar" class="user-avatar-image"&gt;</code></li>
+                    </ul>
+                </li>
+                <li><strong>Thay thế</strong> 2 dòng đó bằng code đã copy</li>
+                <li><strong>Lưu file</strong> và commit lên Git</li>
+                <li><strong>Xong!</strong> Logo sẽ luôn hiển thị mà không cần file riêng</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const logoInput = document.getElementById('logoInput');
+        const previewSection = document.getElementById('previewSection');
+        const previewImg = document.getElementById('previewImg');
+        const resultSection = document.getElementById('resultSection');
+        const base64Output = document.getElementById('base64Output');
+        const htmlOutput = document.getElementById('htmlOutput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileType = document.getElementById('fileType');
+        const successBase64 = document.getElementById('successBase64');
+        const successHTML = document.getElementById('successHTML');
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            logoInput.click();
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            }
+        });
+
+        // File input change
+        logoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            // Show file info
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileType.textContent = file.type;
+            fileInfo.classList.add('show');
+
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const base64String = event.target.result;
+                
+                // Show preview
+                previewImg.src = base64String;
+                previewSection.classList.add('show');
+                
+                // Show result
+                resultSection.classList.add('show');
+                base64Output.value = base64String;
+                
+                // Generate HTML code
+                const htmlCode = `<!-- THAY THẾ TRONG FILE index.html -->
+
+<!-- 1. Tìm dòng này (ở đầu file, trong thẻ <head>): -->
+<!-- <link rel="icon" type="image/png" href="logo/logo.png"> -->
+
+<!-- Thay bằng dòng này: -->
+<link rel="icon" type="image/png" href="${base64String}">
+
+
+<!-- 2. Tìm dòng này (ở phần header-right): -->
+<!-- <img src="logo/logo.png" alt="User Avatar" class="user-avatar-image"> -->
+
+<!-- Thay bằng dòng này: -->
+<img src="${base64String}" alt="User Avatar" class="user-avatar-image">`;
+                
+                htmlOutput.value = htmlCode;
+
+                // Scroll to result
+                resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function copyBase64() {
+            base64Output.select();
+            document.execCommand('copy');
+            successBase64.classList.add('show');
+            setTimeout(() => {
+                successBase64.classList.remove('show');
+            }, 3000);
+        }
+
+        function copyHTML() {
+            htmlOutput.select();
+            document.execCommand('copy');
+            successHTML.classList.add('show');
+            setTimeout(() => {
+                successHTML.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

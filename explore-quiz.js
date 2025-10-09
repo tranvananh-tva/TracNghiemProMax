@@ -290,15 +290,12 @@ class ExploreQuizManager {
     async initialize() {
         this.setupUserName();
         
-        // Kiểm tra xem có phải lần đầu truy cập không
-        const isFirstTime = !localStorage.getItem('hasConfiguredServer');
+        // Đánh dấu đã cấu hình để không hiện thông báo
+        localStorage.setItem('hasConfiguredServer', 'true');
         
         await this.checkServerStatus();
         
-        // Nếu server offline và là lần đầu, hiển thị hướng dẫn
-        if (!this.isServerOnline && isFirstTime) {
-            this.showFirstTimeSetupGuide();
-        }
+        // Không hiển thị thông báo hướng dẫn nữa
         
         this.loadSharedQuizzes();
         this.setupEventListeners();

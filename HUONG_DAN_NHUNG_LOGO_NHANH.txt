@@ -1,0 +1,124 @@
+═══════════════════════════════════════════════════════════════
+   HƯỚNG DẪN NHÚNG LOGO VÀO HTML - ĐƠN GIẢN & NHANH CHÓNG
+═══════════════════════════════════════════════════════════════
+
+📌 MỤC ĐÍCH:
+   Nhúng logo trực tiếp vào HTML để logo luôn hiển thị khi tải lên Git
+   mà không cần file logo.png riêng.
+
+═══════════════════════════════════════════════════════════════
+
+✅ BƯỚC 1: MỞ FILE CÔNG CỤ CHUYỂN ĐỔI
+   
+   1. Tìm file: convert-logo-to-base64.html
+   2. Double-click để mở trong trình duyệt
+   3. Bạn sẽ thấy giao diện đẹp để upload logo
+
+═══════════════════════════════════════════════════════════════
+
+✅ BƯỚC 2: CHỌN FILE LOGO
+
+   1. Click vào vùng "Kéo thả file logo.png vào đây"
+      HOẶC
+      Kéo file logo/logo.png vào vùng đó
+   
+   2. Đợi vài giây, bạn sẽ thấy:
+      - Preview logo
+      - Thông tin file
+      - Mã Base64
+      - Code HTML để thay thế
+
+═══════════════════════════════════════════════════════════════
+
+✅ BƯỚC 3: COPY CODE HTML
+
+   1. Cuộn xuống phần "Code HTML để thay thế"
+   2. Click nút "📋 Copy code HTML"
+   3. Thấy thông báo "✅ Đã copy code HTML!"
+
+═══════════════════════════════════════════════════════════════
+
+✅ BƯỚC 4: THAY THẾ TRONG index.html
+
+   Mở file index.html và tìm 2 dòng sau:
+
+   ┌──────────────────────────────────────────────────────��──┐
+   │ DÒNG 1 (ở đầu file, trong thẻ <head>):                 │
+   │                                                          │
+   │ <link rel="icon" type="image/png" href="logo/logo.png"> │
+   └─────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────┐
+   │ DÒNG 2 (ở phần header-right, khoảng dòng 130):         │
+   │                                                          │
+   │ <img src="logo/logo.png" alt="User Avatar"              │
+   │      class="user-avatar-image">                         │
+   └─────────────────────────────────────────────────────────┘
+
+   Thay thế 2 dòng này bằng code đã copy từ công cụ.
+
+═══════════════════════════════════════════════════════════════
+
+✅ BƯỚC 5: LƯU VÀ KIỂM TRA
+
+   1. Lưu file index.html (Ctrl + S)
+   2. Mở index.html trong trình duyệt
+   3. Kiểm tra logo có hiển thị không
+   4. Kiểm tra favicon (icon trên tab trình duyệt)
+
+═══════════════════════════════════════════════════════════════
+
+✅ BƯỚC 6: COMMIT VÀ PUSH LÊN GIT
+
+   Mở terminal và chạy:
+
+   git add index.html
+   git commit -m "Nhúng logo vào HTML bằng Base64"
+   git push origin main
+
+   🎉 XONG! Logo giờ sẽ luôn hiển thị trên Git!
+
+═══════════════════════════════════════════════════════════════
+
+💡 LƯU Ý QUAN TRỌNG:
+
+   ✓ Sau khi nhúng logo bằng Base64, bạn có thể XÓA thư mục logo/
+     (nhưng nên giữ lại để backup)
+   
+   ✓ Logo sẽ được nhúng trực tiếp vào HTML, không cần file riêng
+   
+   ✓ File index.html sẽ lớn hơn một chút (~280KB)
+   
+   ✓ Logo sẽ LUÔN hiển thị khi tải lên Git, GitHub Pages, Netlify...
+
+═══════════════════════════════════════════════════════════════
+
+❓ NẾU GẶP VẤN ĐỀ:
+
+   1. Logo không hiển thị sau khi thay thế?
+      → Kiểm tra lại xem đã thay thế đúng 2 dòng chưa
+      → Đảm bảo không bị thiếu dấu ngoặc hoặc dấu >
+
+   2. File index.html bị lỗi?
+      → Dùng Ctrl + Z để undo
+      → Thử lại từ đầu
+
+   3. Muốn đổi logo sau này?
+      → Chạy lại công cụ convert-logo-to-base64.html
+      → Chọn logo mới
+      → Copy và thay thế lại
+
+═══════════════════════════════════════════════════════════════
+
+🎯 TÓM TẮT NHANH:
+
+   1. Mở convert-logo-to-base64.html
+   2. Chọn logo/logo.png
+   3. Copy code HTML
+   4. Thay thế 2 dòng trong index.html
+   5. Lưu và commit lên Git
+   6. XONG!
+
+═══════════════════════════════════════════════════════════════
+
+Chúc bạn thành công! 🚀
