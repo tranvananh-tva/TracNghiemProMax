@@ -378,27 +378,42 @@ class SupabaseQuizManager {
         }
 
         try {
-            const { error } = await this.supabase.rpc('increment_views', {
-                quiz_id: quizId
-            });
+            // Lấy số lượt xem hiện tại
+            const { data: currentData, error: selectError } = await this.supabase
+                .from(this.tableName)
+                .select('views')
+                .eq('id', quizId)
+                .single();
 
-            // Nếu function chưa tồn tại, dùng cách thủ công
-            if (error && error.code === '42883') {
-                const { data: currentData } = await this.supabase
-                    .from(this.tableName)
-                    .select('views')
-                    .eq('id', quizId)
-                    .single();
-
-                if (currentData) {
-                    await this.supabase
-                        .from(this.tableName)
-                        .update({ views: (currentData.views || 0) + 1 })
-                        .eq('id', quizId);
-                }
+            if (selectError) {
+                throw selectError;
             }
 
-            return { success: true };
+            if (!currentData) {
+                throw new Error('Quiz không tồn tại');
+            }
+
+            // Tăng lượt xem
+            const newViews = (currentData.views || 0) + 1;
+            
+            const { error: updateError } = await this.supabase
+                .from(this.tableName)
+                .update({ 
+                    views: newViews,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', quizId);
+
+            if (updateError) {
+                throw updateError;
+            }
+
+            console.log(`✅ Increased views for quiz ${quizId}: ${newViews}`);
+
+            return { 
+                success: true, 
+                views: newViews 
+            };
         } catch (error) {
             console.error('Error incrementing views:', error);
             return { success: false };

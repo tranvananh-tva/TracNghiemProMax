@@ -301,31 +301,178 @@ class ExploreQuizManager {
             await this.checkServerStatus();
         }
         
-        // Bật Realtime nếu Supabase khả dụng
-        if (this.isSupabaseAvailable) {
-            this.setupRealtimeUpdates();
-        }
+        // Load quiz trước
+        await this.loadSharedQuizzes();
         
-        this.loadSharedQuizzes();
+        // Bật Realtime/Polling sau khi load xong
+        this.setupRealtimeUpdates();
+        
         this.setupEventListeners();
+        
+        // Yêu cầu quyền thông báo (optional)
+        this.requestNotificationPermission();
     }
 
     // Thiết lập cập nhật realtime
     setupRealtimeUpdates() {
-        if (!window.supabaseQuizManager) {
-            console.warn('Supabase Quiz Manager not available');
+        if (this.isSupabaseAvailable && window.supabaseQuizManager) {
+            // Bật Realtime cho Supabase
+            window.supabaseQuizManager.enableRealtime();
+
+            // Đăng ký callback để nhận cập nhật
+            window.supabaseQuizManager.onQuizUpdate((update) => {
+                this.handleRealtimeUpdate(update);
+            });
+
+            console.log('✅ Supabase Realtime enabled - Auto-update is active');
+        } else if (this.isServerOnline) {
+            // Bật Polling cho Local Server
+            this.startServerPolling();
+            console.log('✅ Local Server Polling enabled - Auto-update every 5 seconds');
+        } else {
+            console.warn('⚠️ No realtime updates available (offline mode)');
+        }
+    }
+
+    // Bắt đầu polling cho Local Server
+    startServerPolling() {
+        // Dừng polling cũ nếu có
+        this.stopServerPolling();
+
+        // Lưu timestamp của quiz mới nhất
+        if (this.sharedQuizzes.length > 0) {
+            this.lastUpdateTime = new Date(this.sharedQuizzes[0].sharedAt).getTime();
+        } else {
+            this.lastUpdateTime = Date.now();
+        }
+
+        // Poll mỗi 5 giây
+        this.pollingInterval = setInterval(() => {
+            this.checkForUpdates();
+        }, 5000);
+
+        console.log('🔄 Started polling for updates every 5 seconds');
+    }
+
+    // Dừng polling
+    stopServerPolling() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+            console.log('⏹️ Stopped polling');
+        }
+    }
+
+    // Kiểm tra cập nhật mới từ server
+    async checkForUpdates() {
+        if (!this.isServerOnline) {
             return;
         }
 
-        // Bật Realtime
-        window.supabaseQuizManager.enableRealtime();
+        try {
+            const response = await fetch(`${this.API_BASE_URL}/shared-quizzes`, {
+                signal: AbortSignal.timeout(3000)
+            });
 
-        // Đăng ký callback để nhận cập nhật
-        window.supabaseQuizManager.onQuizUpdate((update) => {
-            this.handleRealtimeUpdate(update);
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.quizzes && data.quizzes.length > 0) {
+                // Kiểm tra quiz mới
+                const newQuizzes = data.quizzes.filter(quiz => {
+                    const quizTime = new Date(quiz.sharedAt).getTime();
+                    return quizTime > this.lastUpdateTime;
+                });
+
+                if (newQuizzes.length > 0) {
+                    console.log(`🆕 Found ${newQuizzes.length} new quiz(zes)`);
+                    
+                    // Cập nhật timestamp
+                    this.lastUpdateTime = new Date(newQuizzes[0].sharedAt).getTime();
+
+                    // Thêm quiz mới vào đầu danh sách
+                    newQuizzes.reverse().forEach(quiz => {
+                        this.handleRealtimeUpdate({
+                            type: 'INSERT',
+                            quiz: quiz
+                        });
+                    });
+
+                    // Hiển thị thông báo
+                    this.showNewQuizNotification(newQuizzes.length);
+                }
+
+                // Kiểm tra cập nhật views/attempts
+                this.checkStatsUpdates(data.quizzes);
+            }
+        } catch (error) {
+            // Không log lỗi để tránh spam console
+            if (error.name !== 'AbortError' && error.name !== 'TimeoutError') {
+                console.warn('Polling error:', error.message);
+            }
+        }
+    }
+
+    // Kiểm tra cập nhật stats (views, attempts)
+    checkStatsUpdates(serverQuizzes) {
+        serverQuizzes.forEach(serverQuiz => {
+            const localQuiz = this.sharedQuizzes.find(q => q.id === serverQuiz.id);
+            
+            if (localQuiz) {
+                // Kiểm tra xem có thay đổi không
+                if (localQuiz.views !== serverQuiz.views || 
+                    localQuiz.attempts !== serverQuiz.attempts) {
+                    
+                    // Cập nhật stats
+                    this.handleRealtimeUpdate({
+                        type: 'UPDATE',
+                        quiz: serverQuiz
+                    });
+                }
+            }
         });
+    }
 
-        console.log('✅ Realtime updates enabled');
+    // Hiển thị thông báo quiz mới
+    showNewQuizNotification(count) {
+        const message = count === 1 
+            ? '🆕 Có 1 bài thi mới!' 
+            : `🆕 Có ${count} bài thi mới!`;
+        
+        // Hiển thị toast
+        if (window.quizManager && window.quizManager.showToast) {
+            window.quizManager.showToast(message, 'info');
+        }
+
+        // Hiển thị badge trên tab nếu không đang xem
+        if (document.hidden) {
+            this.showBrowserNotification(message);
+        }
+    }
+
+    // Hiển thị thông báo trình duyệt
+    showBrowserNotification(message) {
+        // Kiểm tra quyền thông báo
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('Trắc Nghiệm Pro', {
+                body: message,
+                icon: 'logo/logo.png',
+                badge: 'logo/logo.png'
+            });
+        }
+    }
+
+    // Yêu cầu quyền thông báo
+    async requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                console.log('✅ Notification permission granted');
+            }
+        }
     }
 
     // Xử lý cập nhật realtime
@@ -767,11 +914,20 @@ class ExploreQuizManager {
             });
         }
 
-        // Nút làm mới
+        // Nút làm mới với hiệu ứng
         const refreshBtn = document.getElementById('refresh-shared-quizzes');
         if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => {
-                this.loadSharedQuizzes();
+            refreshBtn.addEventListener('click', async () => {
+                // Thêm class refreshing để hiệu ứng xoay
+                refreshBtn.classList.add('refreshing');
+                
+                // Load quiz
+                await this.loadSharedQuizzes();
+                
+                // Xóa class sau khi load xong
+                setTimeout(() => {
+                    refreshBtn.classList.remove('refreshing');
+                }, 500);
             });
         }
     }
@@ -954,9 +1110,9 @@ class ExploreQuizManager {
                                 <i class="fas fa-question-circle"></i>
                                 <span>${quiz.totalQuestions} câu</span>
                             </div>
-                            <div class="stat-item">
+                            <div class="stat-item stat-views">
                                 <i class="fas fa-eye"></i>
-                                <span>${quiz.views || 0} lượt xem</span>
+                                <span class="views-count" data-quiz-id="${quiz.id}">${quiz.views || 0} lượt xem</span>
                             </div>
                             <div class="stat-item">
                                 <i class="fas fa-pen"></i>
@@ -972,8 +1128,13 @@ class ExploreQuizManager {
                         </button>
                         <button class="btn-view-details" onclick="exploreQuizManager.viewQuizDetails('${quiz.id}')">
                             <i class="fas fa-info-circle"></i>
-                            Chi tiết
+                            Xem chi tiết bài
                         </button>
+                        ${this.isQuizOwner(quiz) ? `
+                            <button class="btn-edit-quiz" onclick="exploreQuizManager.showEditDeleteMenu('${quiz.id}', event)">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             `;
@@ -1272,6 +1433,28 @@ class ExploreQuizManager {
     // Xem chi tiết quiz
     async viewQuizDetails(quizId) {
         try {
+            // Tăng lượt xem khi người dùng click vào xem chi tiết
+            const newViewCount = await this.incrementViews(quizId);
+            
+            // Cập nhật UI ngay lập tức
+            if (newViewCount !== null) {
+                this.updateViewCountOnCard(quizId, newViewCount);
+            }
+            
+            // Thử Supabase trước
+            if (this.isSupabaseAvailable && window.supabaseQuizManager) {
+                try {
+                    const result = await window.supabaseQuizManager.getQuizById(quizId);
+                    if (result.success) {
+                        this.showQuizDetailsModal(result.quiz);
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('Supabase view details failed, trying local server:', error);
+                }
+            }
+            
+            // Fallback sang Local server
             const response = await fetch(`${this.API_BASE_URL}/shared-quizzes/${quizId}`);
             const data = await response.json();
 
@@ -1282,22 +1465,134 @@ class ExploreQuizManager {
             }
         } catch (error) {
             console.error('Error loading quiz details:', error);
-            quizManager.showToast('Lỗi khi tải chi tiết', 'error');
+            
+            // Thử lấy từ offline storage
+            const offlineQuiz = this.getOfflineQuiz(quizId);
+            if (offlineQuiz) {
+                this.showQuizDetailsModal(offlineQuiz);
+                quizManager.showToast('📱 Đang xem chi tiết offline', 'info');
+            } else {
+                quizManager.showToast('Lỗi khi tải chi tiết', 'error');
+            }
         }
     }
 
-    // Hiển thị modal chi tiết
+    // Cập nhật số lượt xem trên card
+    updateViewCountOnCard(quizId, newViewCount) {
+        const viewsElement = document.querySelector(`.views-count[data-quiz-id="${quizId}"]`);
+        if (viewsElement) {
+            viewsElement.textContent = `${newViewCount} lượt xem`;
+            viewsElement.classList.add('stat-updated');
+            setTimeout(() => {
+                viewsElement.classList.remove('stat-updated');
+            }, 1000);
+        }
+    }
+
+    // Tăng lượt xem
+    async incrementViews(quizId) {
+        try {
+            // Kiểm tra xem đã xem quiz này chưa (trong session hiện tại)
+            const viewedQuizzes = JSON.parse(sessionStorage.getItem('viewedQuizzes') || '[]');
+            
+            if (viewedQuizzes.includes(quizId)) {
+                // Đã xem rồi, không tăng nữa trong session này
+                console.log('⏭️ Quiz already viewed in this session');
+                return null;
+            }
+            
+            // Đánh dấu đã xem trong session
+            viewedQuizzes.push(quizId);
+            sessionStorage.setItem('viewedQuizzes', JSON.stringify(viewedQuizzes));
+            
+            let newViews = 0;
+            
+            // Thử Supabase trước
+            if (this.isSupabaseAvailable && window.supabaseQuizManager) {
+                try {
+                    const result = await window.supabaseQuizManager.incrementViews(quizId);
+                    if (result && result.success) {
+                        newViews = result.views || 0;
+                        console.log('✅ Increased views on Supabase:', newViews);
+                        
+                        // Cập nhật trong danh sách local
+                        const quiz = this.sharedQuizzes.find(q => q.id === quizId);
+                        if (quiz) {
+                            quiz.views = newViews;
+                        }
+                        
+                        return newViews;
+                    }
+                } catch (error) {
+                    console.warn('Supabase increment views failed:', error);
+                }
+            }
+            
+            // Fallback sang Local server
+            if (this.isServerOnline) {
+                try {
+                    const response = await fetch(`${this.API_BASE_URL}/shared-quizzes/${quizId}/view`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        newViews = data.views || 0;
+                        console.log('✅ Increased views on Local Server:', newViews);
+                        
+                        // Cập nhật trong danh sách local
+                        const quiz = this.sharedQuizzes.find(q => q.id === quizId);
+                        if (quiz) {
+                            quiz.views = newViews;
+                        }
+                        
+                        return newViews;
+                    }
+                } catch (error) {
+                    console.warn('Local server increment views failed:', error);
+                }
+            }
+            
+            // Nếu cả 2 đều fail, cập nhật local
+            const quiz = this.sharedQuizzes.find(q => q.id === quizId);
+            if (quiz) {
+                quiz.views = (quiz.views || 0) + 1;
+                newViews = quiz.views;
+                console.log('📱 Increased views locally:', newViews);
+                return newViews;
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('Error incrementing views:', error);
+            return null;
+        }
+    }
+
+    // Hiển thị modal chi tiết với xem trước đầy đủ
     showQuizDetailsModal(quiz) {
         const modal = document.getElementById('quiz-details-modal');
         if (!modal) return;
 
         const modalContent = modal.querySelector('.quiz-details-content');
         const date = new Date(quiz.sharedAt).toLocaleString('vi-VN');
+        
+        // Tính toán số lượng câu hỏi để xem trước (tối đa 5 câu)
+        const previewCount = Math.min(5, quiz.questions.length);
 
         modalContent.innerHTML = `
             <div class="quiz-details-header">
-                <h2>${this.escapeHtml(quiz.title)}</h2>
-                <p class="quiz-details-description">${this.escapeHtml(quiz.description)}</p>
+                <div class="quiz-details-title-section">
+                    <h2>${this.escapeHtml(quiz.title)}</h2>
+                    <p class="quiz-details-description">${this.escapeHtml(quiz.description)}</p>
+                </div>
+                <button class="btn-close-modal" onclick="exploreQuizManager.closeDetailsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
             <div class="quiz-details-info">
@@ -1323,29 +1618,56 @@ class ExploreQuizManager {
                 </div>
             </div>
 
-            <div class="quiz-preview-questions">
-                <h3><i class="fas fa-list"></i> Xem trước câu hỏi (3 câu đầu)</h3>
-                ${quiz.questions.slice(0, 3).map((q, index) => `
-                    <div class="preview-question-item">
-                        <div class="preview-question-number">${index + 1}</div>
-                        <div class="preview-question-text">${this.escapeHtml(q.question)}</div>
-                        <div class="preview-options-count">
-                            <i class="fas fa-list-ul"></i>
-                            ${q.options.length} lựa chọn
+            <div class="quiz-preview-section">
+                <div class="quiz-preview-header">
+                    <h3><i class="fas fa-eye"></i> Xem Trước Câu Hỏi</h3>
+                    <span class="preview-badge">${previewCount}/${quiz.totalQuestions} câu</span>
+                </div>
+                
+                <div class="quiz-preview-questions">
+                    ${quiz.questions.slice(0, previewCount).map((q, index) => `
+                        <div class="preview-question-item">
+                            <div class="preview-question-header">
+                                <div class="preview-question-number">
+                                    <i class="fas fa-question"></i>
+                                    <span>Câu ${index + 1}</span>
+                                </div>
+                                ${q.image ? '<span class="preview-has-image"><i class="fas fa-image"></i> Có hình ảnh</span>' : ''}
+                            </div>
+                            <div class="preview-question-text">${this.escapeHtml(q.question)}</div>
+                            ${q.image ? `<div class="preview-question-image"><img src="${q.image}" alt="Hình câu hỏi" /></div>` : ''}
+                            <div class="preview-options">
+                                ${q.options.map((opt, optIndex) => {
+                                    // Xử lý trường hợp opt là object hoặc string
+                                    const optionText = typeof opt === 'object' ? (opt.text || opt.option || JSON.stringify(opt)) : opt;
+                                    return `
+                                        <div class="preview-option">
+                                            <span class="preview-option-label">${String.fromCharCode(65 + optIndex)}.</span>
+                                            <span class="preview-option-text">${this.escapeHtml(optionText)}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
                         </div>
+                    `).join('')}
+                </div>
+                
+                ${quiz.totalQuestions > previewCount ? `
+                    <div class="more-questions-notice">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Còn <strong>${quiz.totalQuestions - previewCount} câu hỏi</strong> nữa. Vào ôn thi để xem toàn bộ!</span>
                     </div>
-                `).join('')}
-                ${quiz.totalQuestions > 3 ? `<p class="more-questions">... và ${quiz.totalQuestions - 3} câu hỏi khác</p>` : ''}
+                ` : ''}
             </div>
 
             <div class="quiz-details-actions">
-                <button class="btn-primary" onclick="exploreQuizManager.startSharedQuiz('${quiz.id}'); exploreQuizManager.closeDetailsModal();">
-                    <i class="fas fa-play"></i>
-                    Bắt Đầu Làm Bài
+                <button class="btn-start-quiz-primary" onclick="exploreQuizManager.startSharedQuiz('${quiz.id}'); exploreQuizManager.closeDetailsModal();">
+                    <i class="fas fa-play-circle"></i>
+                    <span>Vào Ôn Thi Ngay</span>
                 </button>
-                <button class="btn-secondary" onclick="exploreQuizManager.closeDetailsModal()">
-                    <i class="fas fa-times"></i>
-                    Đóng
+                <button class="btn-close-quiz" onclick="exploreQuizManager.closeDetailsModal()">
+                    <i class="fas fa-times-circle"></i>
+                    <span>Đóng</span>
                 </button>
             </div>
         `;
@@ -1583,6 +1905,334 @@ class ExploreQuizManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Kiểm tra xem người dùng hiện tại có phải là chủ sở hữu quiz không
+    isQuizOwner(quiz) {
+        // Kiểm tra theo userName
+        if (this.currentUserName && quiz.userName) {
+            return this.currentUserName.toLowerCase() === quiz.userName.toLowerCase();
+        }
+        
+        // Kiểm tra theo originalId nếu là quiz offline
+        if (quiz.isOffline && quiz.originalId) {
+            const localQuizzes = quizManager.quizzes || [];
+            return localQuizzes.some(q => q.id === quiz.originalId);
+        }
+        
+        return false;
+    }
+
+    // Hiển thị menu chỉnh sửa/xóa
+    showEditDeleteMenu(quizId, event) {
+        event.stopPropagation();
+        
+        // Xóa menu cũ nếu có
+        const oldMenu = document.querySelector('.quiz-action-menu');
+        if (oldMenu) {
+            oldMenu.remove();
+        }
+        
+        const menu = document.createElement('div');
+        menu.className = 'quiz-action-menu';
+        menu.innerHTML = `
+            <button class="menu-item menu-edit" onclick="exploreQuizManager.editQuiz('${quizId}')">
+                <i class="fas fa-edit"></i>
+                <span>Chỉnh sửa</span>
+            </button>
+            <button class="menu-item menu-delete" onclick="exploreQuizManager.confirmDeleteQuiz('${quizId}')">
+                <i class="fas fa-trash"></i>
+                <span>Xóa bài</span>
+            </button>
+        `;
+        
+        // Đặt vị trí menu
+        const button = event.target.closest('.btn-edit-quiz');
+        const rect = button.getBoundingClientRect();
+        menu.style.position = 'fixed';
+        menu.style.top = `${rect.bottom + 5}px`;
+        menu.style.right = `${window.innerWidth - rect.right}px`;
+        
+        document.body.appendChild(menu);
+        
+        // Đóng menu khi click ra ngoài
+        setTimeout(() => {
+            document.addEventListener('click', function closeMenu(e) {
+                if (!menu.contains(e.target)) {
+                    menu.remove();
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }, 0);
+    }
+
+    // Chỉnh sửa quiz
+    async editQuiz(quizId) {
+        try {
+            // Đóng menu
+            document.querySelector('.quiz-action-menu')?.remove();
+            
+            // Lấy thông tin quiz
+            let quiz = this.sharedQuizzes.find(q => q.id === quizId);
+            
+            if (!quiz) {
+                // Thử lấy từ server
+                if (this.isSupabaseAvailable && window.supabaseQuizManager) {
+                    const result = await window.supabaseQuizManager.getQuizById(quizId);
+                    if (result.success) {
+                        quiz = result.quiz;
+                    }
+                } else if (this.isServerOnline) {
+                    const response = await fetch(`${this.API_BASE_URL}/shared-quizzes/${quizId}`);
+                    const data = await response.json();
+                    if (data.success) {
+                        quiz = data.quiz;
+                    }
+                }
+            }
+            
+            if (!quiz) {
+                quizManager.showToast('Không tìm thấy quiz!', 'error');
+                return;
+            }
+            
+            // Kiểm tra quyền sở hữu
+            if (!this.isQuizOwner(quiz)) {
+                quizManager.showToast('Bạn không có quyền chỉnh sửa bài này!', 'error');
+                return;
+            }
+            
+            // Hiển thị modal chỉnh sửa
+            this.showEditQuizModal(quiz);
+            
+        } catch (error) {
+            console.error('Error editing quiz:', error);
+            quizManager.showToast('Lỗi khi tải thông tin quiz', 'error');
+        }
+    }
+
+    // Hiển thị modal chỉnh sửa
+    showEditQuizModal(quiz) {
+        const modal = document.createElement('div');
+        modal.className = 'edit-quiz-modal';
+        modal.innerHTML = `
+            <div class="edit-quiz-content">
+                <div class="edit-quiz-header">
+                    <h3><i class="fas fa-edit"></i> Chỉnh Sửa Bài Thi</h3>
+                    <button class="btn-close" onclick="this.closest('.edit-quiz-modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="edit-quiz-body">
+                    <div class="form-group">
+                        <label><i class="fas fa-heading"></i> Tên bài thi:</label>
+                        <input type="text" id="edit-quiz-title" value="${this.escapeHtml(quiz.title)}" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-align-left"></i> Mô tả:</label>
+                        <textarea id="edit-quiz-description" class="form-textarea" rows="3">${this.escapeHtml(quiz.description || '')}</textarea>
+                    </div>
+                    <div class="quiz-info-summary">
+                        <div class="info-item">
+                            <i class="fas fa-question-circle"></i>
+                            <span>${quiz.totalQuestions} câu hỏi</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-user"></i>
+                            <span>Người tạo: ${this.escapeHtml(quiz.userName)}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="edit-quiz-footer">
+                    <button class="btn btn-primary" onclick="exploreQuizManager.saveEditedQuiz('${quiz.id}')">
+                        <i class="fas fa-save"></i> Lưu thay đổi
+                    </button>
+                    <button class="btn btn-secondary" onclick="this.closest('.edit-quiz-modal').remove()">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    // Lưu quiz đã chỉnh sửa
+    async saveEditedQuiz(quizId) {
+        try {
+            const title = document.getElementById('edit-quiz-title').value.trim();
+            const description = document.getElementById('edit-quiz-description').value.trim();
+            
+            if (!title) {
+                quizManager.showToast('Vui lòng nhập tên bài thi!', 'warning');
+                return;
+            }
+            
+            quizManager.showToast('🔄 Đang cập nhật...', 'info');
+            
+            // Cập nhật trên Supabase
+            if (this.isSupabaseAvailable && window.supabaseQuizManager) {
+                try {
+                    const result = await window.supabaseQuizManager.updateQuiz(quizId, {
+                        title: title,
+                        description: description
+                    });
+                    
+                    if (result.success) {
+                        quizManager.showToast('✅ Đã cập nhật thành công!', 'success');
+                        document.querySelector('.edit-quiz-modal')?.remove();
+                        await this.loadSharedQuizzes();
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('Supabase update failed:', error);
+                }
+            }
+            
+            // Fallback sang Local Server
+            if (this.isServerOnline) {
+                const response = await fetch(`${this.API_BASE_URL}/shared-quizzes/${quizId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    quizManager.showToast('✅ Đã cập nhật thành công!', 'success');
+                    document.querySelector('.edit-quiz-modal')?.remove();
+                    await this.loadSharedQuizzes();
+                    return;
+                }
+            }
+            
+            // Cập nhật offline
+            const offlineQuizzes = JSON.parse(localStorage.getItem('offlineSharedQuizzes')) || [];
+            const index = offlineQuizzes.findIndex(q => q.id === quizId);
+            
+            if (index !== -1) {
+                offlineQuizzes[index].title = title;
+                offlineQuizzes[index].description = description;
+                localStorage.setItem('offlineSharedQuizzes', JSON.stringify(offlineQuizzes));
+                
+                quizManager.showToast('✅ Đã cập nhật offline!', 'success');
+                document.querySelector('.edit-quiz-modal')?.remove();
+                this.loadOfflineQuizzes();
+            } else {
+                quizManager.showToast('❌ Không thể cập nhật!', 'error');
+            }
+            
+        } catch (error) {
+            console.error('Error saving edited quiz:', error);
+            quizManager.showToast('❌ Lỗi khi lưu thay đổi!', 'error');
+        }
+    }
+
+    // Xác nhận xóa quiz
+    confirmDeleteQuiz(quizId) {
+        // Đóng menu
+        document.querySelector('.quiz-action-menu')?.remove();
+        
+        const quiz = this.sharedQuizzes.find(q => q.id === quizId);
+        
+        if (!quiz) {
+            quizManager.showToast('Không tìm thấy quiz!', 'error');
+            return;
+        }
+        
+        // Kiểm tra quyền sở hữu
+        if (!this.isQuizOwner(quiz)) {
+            quizManager.showToast('Bạn không có quyền xóa bài này!', 'error');
+            return;
+        }
+        
+        const modal = document.createElement('div');
+        modal.className = 'confirm-delete-modal';
+        modal.innerHTML = `
+            <div class="confirm-delete-content">
+                <div class="confirm-delete-header">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Xác Nhận Xóa Bài Thi</h3>
+                </div>
+                <div class="confirm-delete-body">
+                    <p>Bạn có chắc chắn muốn xóa bài thi này?</p>
+                    <div class="quiz-delete-info">
+                        <strong>${this.escapeHtml(quiz.title)}</strong>
+                        <span>${quiz.totalQuestions} câu hỏi</span>
+                    </div>
+                    <p class="warning-text">
+                        <i class="fas fa-info-circle"></i>
+                        Hành động này không thể hoàn tác!
+                    </p>
+                </div>
+                <div class="confirm-delete-footer">
+                    <button class="btn btn-danger" onclick="exploreQuizManager.deleteQuiz('${quizId}')">
+                        <i class="fas fa-trash"></i> Xóa bài
+                    </button>
+                    <button class="btn btn-secondary" onclick="this.closest('.confirm-delete-modal').remove()">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    // Xóa quiz
+    async deleteQuiz(quizId) {
+        try {
+            quizManager.showToast('🔄 Đang xóa...', 'info');
+            
+            // Xóa trên Supabase
+            if (this.isSupabaseAvailable && window.supabaseQuizManager) {
+                try {
+                    const result = await window.supabaseQuizManager.deleteQuiz(quizId);
+                    
+                    if (result.success) {
+                        quizManager.showToast('✅ Đã xóa thành công!', 'success');
+                        document.querySelector('.confirm-delete-modal')?.remove();
+                        await this.loadSharedQuizzes();
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('Supabase delete failed:', error);
+                }
+            }
+            
+            // Fallback sang Local Server
+            if (this.isServerOnline) {
+                const response = await fetch(`${this.API_BASE_URL}/shared-quizzes/${quizId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    quizManager.showToast('✅ Đã xóa thành công!', 'success');
+                    document.querySelector('.confirm-delete-modal')?.remove();
+                    await this.loadSharedQuizzes();
+                    return;
+                }
+            }
+            
+            // Xóa offline
+            let offlineQuizzes = JSON.parse(localStorage.getItem('offlineSharedQuizzes')) || [];
+            offlineQuizzes = offlineQuizzes.filter(q => q.id !== quizId);
+            localStorage.setItem('offlineSharedQuizzes', JSON.stringify(offlineQuizzes));
+            
+            quizManager.showToast('✅ Đã xóa offline!', 'success');
+            document.querySelector('.confirm-delete-modal')?.remove();
+            this.loadOfflineQuizzes();
+            
+        } catch (error) {
+            console.error('Error deleting quiz:', error);
+            quizManager.showToast('❌ Lỗi khi xóa bài thi!', 'error');
+        }
     }
 }
 

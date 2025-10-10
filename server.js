@@ -116,7 +116,7 @@ app.post('/api/shared-quizzes', async (req, res) => {
     }
 });
 
-// API: Lấy chi tiết một quiz
+// API: Lấy chi tiết một quiz (không tăng lượt xem)
 app.get('/api/shared-quizzes/:id', async (req, res) => {
     try {
         const quizzes = await getSharedQuizzes();
@@ -129,11 +129,29 @@ app.get('/api/shared-quizzes/:id', async (req, res) => {
             });
         }
 
-        // Tăng số lượt xem
+        res.json({ success: true, quiz });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// API: Tăng số lượt xem
+app.post('/api/shared-quizzes/:id/view', async (req, res) => {
+    try {
+        const quizzes = await getSharedQuizzes();
+        const quiz = quizzes.find(q => q.id === req.params.id);
+        
+        if (!quiz) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Không tìm thấy quiz' 
+            });
+        }
+
         quiz.views = (quiz.views || 0) + 1;
         await saveSharedQuizzes(quizzes);
 
-        res.json({ success: true, quiz });
+        res.json({ success: true, views: quiz.views });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -161,7 +179,32 @@ app.post('/api/shared-quizzes/:id/attempt', async (req, res) => {
     }
 });
 
-// API: Xóa một quiz (chỉ người tạo mới có thể xóa - cần implement authentication)
+// API: Cập nhật quiz (chỉnh sửa)
+app.put('/api/shared-quizzes/:id', async (req, res) => {
+    try {
+        const { title, description } = req.body;
+        const quizzes = await getSharedQuizzes();
+        const quiz = quizzes.find(q => q.id === req.params.id);
+        
+        if (!quiz) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Không tìm thấy quiz' 
+            });
+        }
+
+        // Cập nhật thông tin
+        if (title) quiz.title = title;
+        if (description !== undefined) quiz.description = description;
+        
+        await saveSharedQuizzes(quizzes);
+        res.json({ success: true, quiz });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// API: Xóa một quiz
 app.delete('/api/shared-quizzes/:id', async (req, res) => {
     try {
         const quizzes = await getSharedQuizzes();
