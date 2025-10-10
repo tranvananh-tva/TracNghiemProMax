@@ -1,0 +1,158 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    CẤU HÌNH SUPABASE NHANH - 5 PHÚT                          ║
+║                  Hướng dẫn siêu nhanh để bắt đầu với Supabase               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📋 CHECKLIST - LÀM THEO THỨ TỰ:
+
+□ BƯỚC 1: TẠO TÀI KHOẢN SUPABASE (2 phút)
+   1. Truy cập: https://supabase.com/
+   2. Click "Start your project"
+   3. Đăng ký bằng GitHub hoặc email (MIỄN PHÍ)
+   
+□ BƯỚC 2: TẠO PROJECT (1 phút)
+   1. Click "New Project"
+   2. Điền:
+      - Name: tracnghiem-pro
+      - Database Password: [Tạo mật khẩu mạnh - LƯU LẠI!]
+      - Region: Southeast Asia (Singapore)
+      - Plan: Free
+   3. Click "Create new project"
+   4. Đợi 1-2 phút
+
+□ BƯỚC 3: LẤY API KEYS (30 giây)
+   1. Vào Settings > API
+   2. Copy 2 thông tin:
+      ✓ Project URL: https://xxxxx.supabase.co
+      ✓ anon/public key: eyJ... (key dài)
+
+□ BƯỚC 4: TẠO BẢNG DATABASE (1 phút)
+   1. Click "SQL Editor" ở sidebar
+   2. Click "New query"
+   3. Copy toàn bộ SQL bên dưới và paste vào
+   4. Click "Run" (Ctrl+Enter)
+   5. Thấy "Success" là OK!
+
+□ BƯỚC 5: CẬP NHẬT CONFIG (30 giây)
+   1. Mở file: supabase-config.js
+   2. Tìm dòng:
+      const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+      const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+   3. Thay bằng thông tin từ Bước 3
+   4. Lưu file (Ctrl+S)
+
+□ BƯỚC 6: THÊM VÀO HTML (30 giây)
+   1. Mở file: index.html
+   2. Thêm dòng này trước </body>:
+      <script type="module" src="supabase-config.js"></script>
+   3. Lưu file (Ctrl+S)
+
+□ BƯỚC 7: KIỂM TRA (30 giây)
+   1. Mở ứng dụng trong browser
+   2. Mở Console (F12)
+   3. Gõ: supabaseQuizManager.isAvailable()
+   4. Thấy "true" là thành công! ✅
+
+═══════════════════════════════════════════════════════════════════���═══════════
+
+📝 SQL TẠO BẢNG (Copy toàn bộ đoạn này):
+
+-- Tạo bảng shared_quizzes
+CREATE TABLE shared_quizzes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    questions JSONB NOT NULL,
+    total_questions INTEGER NOT NULL,
+    user_name TEXT NOT NULL,
+    shared_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    views INTEGER DEFAULT 0,
+    attempts INTEGER DEFAULT 0,
+    likes INTEGER DEFAULT 0,
+    original_id TEXT,
+    tags TEXT[],
+    difficulty TEXT DEFAULT 'medium',
+    category TEXT DEFAULT 'general',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Tạo index
+CREATE INDEX idx_shared_quizzes_shared_at ON shared_quizzes(shared_at DESC);
+CREATE INDEX idx_shared_quizzes_views ON shared_quizzes(views DESC);
+CREATE INDEX idx_shared_quizzes_category ON shared_quizzes(category);
+CREATE INDEX idx_shared_quizzes_difficulty ON shared_quizzes(difficulty);
+
+-- Enable RLS
+ALTER TABLE shared_quizzes ENABLE ROW LEVEL SECURITY;
+
+-- Policies
+CREATE POLICY "Allow public read access" ON shared_quizzes
+    FOR SELECT USING (true);
+
+CREATE POLICY "Allow public insert access" ON shared_quizzes
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public update stats" ON shared_quizzes
+    FOR UPDATE USING (true) WITH CHECK (true);
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎮 SỬ DỤNG NHANH:
+
+// Chia sẻ quiz
+const result = await supabaseQuizManager.shareQuiz(quiz, "Tên của bạn");
+
+// Lấy danh sách quiz
+const quizzes = await supabaseQuizManager.getAllQuizzes(50);
+
+// Tìm kiếm
+const results = await supabaseQuizManager.searchQuizzes("toán học");
+
+// Lấy quiz phổ biến
+const popular = await supabaseQuizManager.getPopularQuizzes(10);
+
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ LỖI THƯỜNG GẶP:
+
+1. "Supabase không khả dụng"
+   → Kiểm tra đã cập nhật SUPABASE_URL và SUPABASE_ANON_KEY chưa
+
+2. "relation 'shared_quizzes' does not exist"
+   → Chưa chạy SQL tạo bảng, quay lại Bước 4
+
+3. "row-level security policy"
+   → Chưa tạo policies, chạy lại toàn bộ SQL
+
+4. CORS error
+   → Vào Settings > API > Allowed Origins, thêm domain của bạn
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✨ ƯU ĐIỂM SUPABASE:
+
+✅ Miễn phí 500MB database + 2GB bandwidth/tháng
+✅ Tự động đồng bộ giữa các thiết bị
+✅ Không cần cập nhật file JSON thủ công
+✅ Dashboard đẹp, dễ quản lý
+✅ PostgreSQL mạnh mẽ
+✅ Dễ cài đặt hơn Firebase
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📚 TÀI LIỆU CHI TIẾT:
+
+Xem file: HUONG_DAN_SUPABASE.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎉 HOÀN TẤT!
+
+Sau khi làm xong 7 bước trên, bạn đã có thể:
+- Chia sẻ quiz lên cloud
+- Mọi người xem được ngay lập tức
+- Không cần cùng mạng LAN
+- Không cần cập nhật file thủ công
+
+Chúc bạn thành công! 🚀

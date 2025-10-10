@@ -799,6 +799,156 @@
     }
 }
 
+/* Realtime Update Animations */
+.quiz-new-highlight {
+    animation: highlightNew 3s ease;
+}
+
+@keyframes highlightNew {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 20px rgba(72, 187, 120, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(72, 187, 120, 0);
+    }
+}
+
+.stat-updated {
+    animation: statPulse 1s ease;
+    color: var(--success-color) !important;
+    font-weight: 700 !important;
+}
+
+@keyframes statPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Realtime Badge */
+.realtime-badge {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 999;
+    animation: slideInRight 0.5s ease;
+}
+
+.realtime-badge i {
+    font-size: 16px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Realtime Notification Toast */
+.realtime-toast {
+    position: fixed;
+    top: 80px;
+    right: 30px;
+    background: white;
+    border: 2px solid var(--success-color);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    min-width: 350px;
+    animation: slideInRight 0.5s ease;
+}
+
+.realtime-toast.hide {
+    animation: slideOutRight 0.5s ease forwards;
+}
+
+@keyframes slideOutRight {
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+.realtime-toast-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.realtime-toast-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.realtime-toast-title {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.realtime-toast-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 5px;
+    transition: var(--transition);
+}
+
+.realtime-toast-close:hover {
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+
+.realtime-toast-body {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.realtime-toast-body strong {
+    color: var(--text-primary);
+}
+
 /* Server Instructions Modal */
 .server-instructions-modal {
     position: fixed;

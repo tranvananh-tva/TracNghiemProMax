@@ -293,12 +293,161 @@ class ExploreQuizManager {
         // Đánh dấu đã cấu hình để không hiện thông báo
         localStorage.setItem('hasConfiguredServer', 'true');
         
-        await this.checkServerStatus();
+        // Kiểm tra Supabase trước
+        await this.checkSupabaseStatus();
         
-        // Không hiển thị thông báo hướng dẫn nữa
+        // Nếu Supabase không khả dụng, kiểm tra Local Server
+        if (!this.isSupabaseAvailable) {
+            await this.checkServerStatus();
+        }
+        
+        // Bật Realtime nếu Supabase khả dụng
+        if (this.isSupabaseAvailable) {
+            this.setupRealtimeUpdates();
+        }
         
         this.loadSharedQuizzes();
         this.setupEventListeners();
+    }
+
+    // Thiết lập cập nhật realtime
+    setupRealtimeUpdates() {
+        if (!window.supabaseQuizManager) {
+            console.warn('Supabase Quiz Manager not available');
+            return;
+        }
+
+        // Bật Realtime
+        window.supabaseQuizManager.enableRealtime();
+
+        // Đăng ký callback để nhận cập nhật
+        window.supabaseQuizManager.onQuizUpdate((update) => {
+            this.handleRealtimeUpdate(update);
+        });
+
+        console.log('✅ Realtime updates enabled');
+    }
+
+    // Xử lý cập nhật realtime
+    handleRealtimeUpdate(update) {
+        const { type, quiz } = update;
+
+        if (type === 'INSERT') {
+            // Quiz mới được thêm
+            this.handleNewQuizRealtime(quiz);
+        } else if (type === 'UPDATE') {
+            // Quiz được cập nhật (views, attempts, likes)
+            this.handleQuizUpdateRealtime(quiz);
+        } else if (type === 'DELETE') {
+            // Quiz bị xóa
+            this.handleQuizDeleteRealtime(quiz);
+        }
+    }
+
+    // Xử lý quiz mới (realtime)
+    handleNewQuizRealtime(quiz) {
+        // Thêm vào đầu danh sách
+        this.sharedQuizzes.unshift(quiz);
+
+        // Render lại danh sách
+        this.renderSharedQuizzes(this.sharedQuizzes);
+
+        // Hiệu ứng highlight cho quiz mới
+        setTimeout(() => {
+            const quizCard = document.querySelector(`[data-quiz-id="${quiz.id}"]`);
+            if (quizCard) {
+                quizCard.classList.add('quiz-new-highlight');
+                setTimeout(() => {
+                    quizCard.classList.remove('quiz-new-highlight');
+                }, 3000);
+            }
+        }, 100);
+    }
+
+    // Xử lý cập nhật quiz (realtime)
+    handleQuizUpdateRealtime(quiz) {
+        // Tìm quiz trong danh sách
+        const index = this.sharedQuizzes.findIndex(q => q.id === quiz.id);
+        
+        if (index !== -1) {
+            // Cập nhật dữ liệu
+            this.sharedQuizzes[index] = {
+                ...this.sharedQuizzes[index],
+                views: quiz.views,
+                attempts: quiz.attempts,
+                likes: quiz.likes
+            };
+
+            // Cập nhật UI cho quiz card này
+            this.updateQuizCardStats(quiz.id, quiz);
+        }
+    }
+
+    // Xử lý xóa quiz (realtime)
+    handleQuizDeleteRealtime(quiz) {
+        // Xóa khỏi danh sách
+        this.sharedQuizzes = this.sharedQuizzes.filter(q => q.id !== quiz.id);
+
+        // Render lại
+        this.renderSharedQuizzes(this.sharedQuizzes);
+    }
+
+    // Cập nhật stats của quiz card
+    updateQuizCardStats(quizId, quiz) {
+        const quizCard = document.querySelector(`[data-quiz-id="${quizId}"]`);
+        
+        if (!quizCard) return;
+
+        // Cập nhật views
+        const viewsElement = quizCard.querySelector('.stat-item:nth-child(2) span');
+        if (viewsElement) {
+            const oldViews = parseInt(viewsElement.textContent);
+            const newViews = quiz.views || 0;
+            
+            if (newViews > oldViews) {
+                viewsElement.textContent = `${newViews} lượt xem`;
+                this.animateStatChange(viewsElement);
+            }
+        }
+
+        // Cập nhật attempts
+        const attemptsElement = quizCard.querySelector('.stat-item:nth-child(3) span');
+        if (attemptsElement) {
+            const oldAttempts = parseInt(attemptsElement.textContent);
+            const newAttempts = quiz.attempts || 0;
+            
+            if (newAttempts > oldAttempts) {
+                attemptsElement.textContent = `${newAttempts} lượt làm`;
+                this.animateStatChange(attemptsElement);
+            }
+        }
+    }
+
+    // Hiệu ứng khi stat thay đổi
+    animateStatChange(element) {
+        element.classList.add('stat-updated');
+        setTimeout(() => {
+            element.classList.remove('stat-updated');
+        }, 1000);
+    }
+
+    // Kiểm tra Supabase có sẵn sàng không
+    async checkSupabaseStatus() {
+        try {
+            // Đ���i Supabase module load
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            if (window.supabaseQuizManager && window.supabaseQuizManager.isAvailable()) {
+                this.isSupabaseAvailable = true;
+                console.log('✅ Supabase is available');
+                return true;
+            }
+        } catch (error) {
+            console.warn('Supabase not available:', error);
+        }
+        
+        this.isSupabaseAvailable = false;
+        return false;
     }
 
     // Kiểm tra trạng thái server
@@ -632,7 +781,22 @@ class ExploreQuizManager {
         try {
             this.showLoading(true);
             
-            // Sử dụng Local server
+            // Ưu tiên Supabase nếu có
+            if (this.isSupabaseAvailable && window.supabaseQuizManager) {
+                try {
+                    const result = await window.supabaseQuizManager.getAllQuizzes(50);
+                    if (result.success) {
+                        this.sharedQuizzes = result.quizzes;
+                        this.renderSharedQuizzes(this.sharedQuizzes);
+                        quizManager.showToast('☁️ Đã tải quiz từ Supabase', 'success');
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('Supabase load failed, trying local server:', error);
+                }
+            }
+            
+            // Fallback sang Local server
             if (!this.isServerOnline) {
                 await this.checkServerStatus();
             }
@@ -936,8 +1100,26 @@ class ExploreQuizManager {
             description: description || 'Không có mô tả'
         };
 
-        // Kiểm tra server trước khi chia sẻ
-        quizManager.showToast('🔄 Đang kiểm tra kết nối...', 'info');
+        // Ưu tiên Supabase nếu có
+        if (this.isSupabaseAvailable && window.supabaseQuizManager) {
+            quizManager.showToast('☁️ Đang chia sẻ lên Supabase...', 'info');
+            try {
+                const result = await window.supabaseQuizManager.shareQuiz(sharedQuiz, userName);
+                if (result.success) {
+                    quizManager.showToast('✨ Đã chia sẻ lên Supabase thành công!', 'success');
+                    this.closeShareModal();
+                    this.switchToExploreTab();
+                    await this.loadSharedQuizzes();
+                    return;
+                }
+            } catch (error) {
+                console.error('Supabase share failed:', error);
+                quizManager.showToast('⚠️ Lỗi Supabase, thử Local Server...', 'warning');
+            }
+        }
+
+        // Fallback sang Local Server
+        quizManager.showToast('🔄 Đang kiểm tra Local Server...', 'info');
         const serverOnline = await this.checkServerStatus();
 
         if (!serverOnline) {
@@ -1182,7 +1364,38 @@ class ExploreQuizManager {
     // Bắt đầu làm bài từ quiz được chia sẻ
     async startSharedQuiz(quizId) {
         try {
-            // Sử dụng Local server
+            // Thử Supabase trước
+            if (this.isSupabaseAvailable && window.supabaseQuizManager) {
+                try {
+                    const result = await window.supabaseQuizManager.getQuizById(quizId);
+                    if (result.success) {
+                        const quiz = result.quiz;
+                        
+                        // Tăng số lượt làm bài
+                        await window.supabaseQuizManager.incrementAttempts(quizId);
+                        
+                        this.saveToOfflineStorage(quiz);
+                        quizManager.currentQuiz = {
+                            id: quiz.id,
+                            title: quiz.title,
+                            description: quiz.description,
+                            questions: quiz.questions,
+                            totalQuestions: quiz.totalQuestions,
+                            isShared: true,
+                            sharedBy: quiz.userName
+                        };
+                        quizManager.currentAnswers = {};
+                        quizManager.switchTab('quiz');
+                        quizManager.renderQuiz();
+                        quizManager.showToast('🚀 Bắt đầu làm bài từ Supabase!', 'success');
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('Supabase start quiz failed, trying local server:', error);
+                }
+            }
+            
+            // Fallback sang Local server
             if (!this.isServerOnline) {
                 const isOnline = await this.checkServerStatus();
                 if (!isOnline) {
