@@ -92,6 +92,9 @@ class AdminManager {
             this.closePasswordModal();
             this.enableAdminMode();
             this.showSuccessNotification();
+            
+            // ⭐ TỰ ĐỘNG CHUYỂN VÀO TAB BÁO CÁO
+            this.navigateToAnalytics();
         } else {
             // Mật khẩu sai
             if (errorMessage) {
@@ -106,6 +109,31 @@ class AdminManager {
                 passwordInput.style.animation = '';
             }, 500);
         }
+    }
+
+    // Tự động chuyển vào tab Báo Cáo
+    navigateToAnalytics() {
+        console.log('📊 Navigating to Analytics tab...');
+        
+        // Đợi một chút để animation hoàn thành
+        setTimeout(() => {
+            // Tìm và click vào tab Báo Cáo
+            const analyticsTab = document.querySelector('[data-tab="analytics"]');
+            if (analyticsTab) {
+                analyticsTab.click();
+                console.log('✅ Switched to Analytics tab');
+                
+                // Load dashboard nếu adminAnalytics đã sẵn sàng
+                setTimeout(() => {
+                    if (window.adminAnalytics && typeof window.adminAnalytics.loadDashboard === 'function') {
+                        window.adminAnalytics.loadDashboard();
+                        console.log('✅ Analytics dashboard loaded');
+                    }
+                }, 300);
+            } else {
+                console.warn('⚠️ Analytics tab not found');
+            }
+        }, 500);
     }
 
     enableAdminMode() {
