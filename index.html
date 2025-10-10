@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="style-mobile-optimized.css">
     <link rel="stylesheet" href="style-streak.css">
     <link rel="stylesheet" href="style-explore.css">
+    <link rel="stylesheet" href="style-analytics.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- JSZip library for reading Word files -->
@@ -88,6 +89,11 @@
                             <i class="fas fa-chart-bar"></i>
                             <span>Kết Quả</span>
                         </a>
+                        <a href="#" class="nav-item" data-tab="analytics" id="analytics-nav-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Báo Cáo</span>
+                            <span class="admin-only-badge">Admin</span>
+                        </a>
                     </div>
                 </nav>
 
@@ -131,7 +137,7 @@
                         <i class="fas fa-moon"></i>
                     </button>
                     <div class="user-menu">
-                        <div class="user-avatar-small">
+                        <div class="user-avatar-small" id="admin-logo-trigger" style="cursor: pointer;" title="Admin Access">
                             <img src="https://anhtran.id.vn/wp-content/uploads/2025/09/cropped-Generated-Image-September-18-2025-8_04PM-1.png" alt="User Avatar" class="user-avatar-image">
                         </div>
                     </div>
@@ -585,6 +591,24 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- Analytics Tab (Admin Only) -->
+                <section id="analytics-tab" class="tab-content">
+                    <div class="page-header">
+                        <h2 class="page-title">
+                            <i class="fas fa-chart-line"></i>
+                            Báo Cáo Analytics
+                            <span class="admin-only-badge" style="margin-left: 15px;">Admin Only</span>
+                        </h2>
+                        <p style="margin-top: 10px; opacity: 0.9;">
+                            Theo dõi hoạt động người dùng, thiết bị, vị trí và thống kê truy cập
+                        </p>
+                    </div>
+
+                    <div id="analytics-content">
+                        <!-- Content will be loaded by admin-analytics.js -->
+                    </div>
+                </section>
             </main>
         </div>
     </div>
@@ -620,6 +644,48 @@
         <div class="quiz-details-modal-content modal-content">
             <div class="quiz-details-content">
                 <!-- Content will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Password Modal -->
+    <div id="admin-password-modal" class="modal">
+        <div class="modal-overlay" onclick="adminManager.closePasswordModal()"></div>
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-shield-alt"></i> Admin Access</h3>
+                <button class="modal-close" onclick="adminManager.closePasswordModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-lock"></i>
+                        Nhập mật khẩu Admin (6 số)
+                    </label>
+                    <input type="password"
+                           id="admin-password-input"
+                           placeholder="Nhập mật khẩu..."
+                           class="form-input"
+                           maxlength="6"
+                           style="text-align: center; font-size: 24px; letter-spacing: 10px;">
+                    <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
+                        Chỉ Admin mới có quyền truy cập
+                    </small>
+                </div>
+                <div id="admin-error-message" style="display: none; color: #ef4444; margin-top: 10px; text-align: center;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Mật khẩu không đúng!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="adminManager.verifyPassword()">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Đăng Nhập
+                </button>
+                <button class="btn-secondary" onclick="adminManager.closePasswordModal()">
+                    <i class="fas fa-times"></i>
+                    Hủy
+                </button>
             </div>
         </div>
     </div>
@@ -733,6 +799,14 @@
     <script src="mobile-menu.js"></script>
     <script src="streak-tracker.js"></script>
     <script src="explore-quiz.js"></script>
+    <script src="admin-manager.js"></script>
+
+    <!-- Analytics Tracker -->
+    <script src="analytics-tracker.js"></script>
+
+    <!-- Admin Analytics Dashboard -->
+    <script src="admin-analytics.js"></script>
+
     <script>
         // Override renderQuiz with modern version for 3-column layout
         document.addEventListener('DOMContentLoaded', function() {
@@ -744,6 +818,19 @@
                 QuizManager.prototype.updateAnswer = QuizManager.prototype.updateAnswerModern;
 
                 console.log('✅ Modern quiz layout activated!');
+            }
+
+            // Initialize Analytics Dashboard when clicking Analytics tab
+            const analyticsNavItem = document.getElementById('analytics-nav-item');
+            if (analyticsNavItem) {
+                analyticsNavItem.addEventListener('click', function() {
+                    // Wait for tab to switch
+                    setTimeout(() => {
+                        if (window.adminAnalytics) {
+                            window.adminAnalytics.loadDashboard();
+                        }
+                    }, 100);
+                });
             }
         });
     </script>

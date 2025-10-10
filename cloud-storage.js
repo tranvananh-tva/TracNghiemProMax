@@ -33,7 +33,15 @@ class CloudQuizManager {
     // Sync với cloud
     async syncWithCloud() {
         try {
-            const response = await fetch(this.SYNC_URL);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 giây timeout
+            
+            const response = await fetch(this.SYNC_URL, {
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
             if (response.ok) {
                 const cloudData = await response.json();
                 const localData = this.getLocalQuizzes();
@@ -45,10 +53,19 @@ class CloudQuizManager {
                 localStorage.setItem(this.STORAGE_KEY, JSON.stringify(merged));
                 
                 console.log('✅ Synced with cloud:', merged.length, 'quizzes');
+                this.isOnline = true;
                 return merged;
+            } else {
+                console.warn('⚠️ Cloud API returned error:', response.status);
+                this.isOnline = false;
             }
         } catch (error) {
-            console.warn('Sync failed, using local data');
+            if (error.name === 'AbortError') {
+                console.warn('⏱️ Cloud sync timeout, using local data');
+            } else {
+                console.warn('⚠️ Cloud sync failed:', error.message);
+            }
+            this.isOnline = false;
         }
         return this.getLocalQuizzes();
     }

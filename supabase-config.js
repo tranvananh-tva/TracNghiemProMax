@@ -725,6 +725,83 @@ class SupabaseQuizManager {
             throw error;
         }
     }
+
+    // ⭐ XÓA QUIZ - HÀM MỚI THÊM VÀO
+    async deleteQuiz(quizId) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase không khả dụng');
+        }
+
+        try {
+            console.log('🗑️ Deleting quiz from Supabase:', quizId);
+
+            // Xóa quiz khỏi Supabase
+            const { error } = await this.supabase
+                .from(this.tableName)
+                .delete()
+                .eq('id', quizId);
+
+            if (error) {
+                console.error('❌ Supabase delete error:', error);
+                throw error;
+            }
+
+            console.log('✅ Quiz deleted from Supabase successfully');
+
+            return {
+                success: true,
+                message: 'Quiz đã được xóa khỏi Supabase'
+            };
+        } catch (error) {
+            console.error('❌ Error deleting quiz from Supabase:', error);
+            
+            // Nếu lỗi là do permission, trả về thông báo rõ ràng
+            if (error.message && error.message.includes('permission')) {
+                throw new Error('Bạn không có quyền xóa bài này. Vui lòng kiểm tra RLS policy trong Supabase.');
+            }
+            
+            throw error;
+        }
+    }
+
+    // Cập nhật quiz (title, description)
+    async updateQuiz(quizId, updates) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase không khả dụng');
+        }
+
+        try {
+            console.log('📝 Updating quiz in Supabase:', quizId, updates);
+
+            const { error } = await this.supabase
+                .from(this.tableName)
+                .update({
+                    ...updates,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', quizId);
+
+            if (error) {
+                console.error('❌ Supabase update error:', error);
+                throw error;
+            }
+
+            console.log('✅ Quiz updated in Supabase successfully');
+
+            return {
+                success: true,
+                message: 'Quiz đã được cập nhật'
+            };
+        } catch (error) {
+            console.error('❌ Error updating quiz in Supabase:', error);
+            
+            if (error.message && error.message.includes('permission')) {
+                throw new Error('Bạn không có quyền chỉnh sửa bài này. Vui lòng kiểm tra RLS policy trong Supabase.');
+            }
+            
+            throw error;
+        }
+    }
 }
 
 // Export Supabase Quiz Manager

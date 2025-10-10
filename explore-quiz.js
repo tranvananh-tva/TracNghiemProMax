@@ -1909,6 +1909,12 @@ class ExploreQuizManager {
 
     // Kiểm tra xem người dùng hiện tại có phải là chủ sở hữu quiz không
     isQuizOwner(quiz) {
+        // ⭐ ADMIN CÓ QUYỀN TUYỆT ĐỐI - Có thể làm mọi thứ
+        if (window.adminManager && window.adminManager.isAdminMode) {
+            console.log('👑 Admin mode: Full access granted');
+            return true;
+        }
+        
         // Kiểm tra theo userName
         if (this.currentUserName && quiz.userName) {
             return this.currentUserName.toLowerCase() === quiz.userName.toLowerCase();
@@ -2130,6 +2136,115 @@ class ExploreQuizManager {
         } catch (error) {
             console.error('Error saving edited quiz:', error);
             quizManager.showToast('❌ Lỗi khi lưu thay đổi!', 'error');
+        }
+    }
+
+    // ⭐ XÓA QUIZ ĐƯỢC CHIA SẺ - HÀM MỚI
+    async deleteSharedQuiz(quizId) {
+        if (!quizId) {
+            throw new Error('Quiz ID không hợp lệ');
+        }
+
+        try {
+            console.log('🗑️ Deleting shared quiz:', quizId);
+
+            // Ưu tiên xóa từ Supabase nếu có
+            if (this.isSupabaseAvailable && window.supabaseQuizManager) {
+                try {
+                    const result = await window.supabaseQuizManager.deleteQuiz(quizId);
+                    if (result.success) {
+                        console.log('✅ Deleted from Supabase successfully');
+                        
+                        // Xóa khỏi danh sách local
+                        this.sharedQuizzes = this.sharedQuizzes.filter(q => q.id !== quizId);
+                        
+                        // Xóa khỏi offline storage
+                        this.removeFromOfflineStorage(quizId);
+                        
+                        // Render lại danh sách
+                        this.renderSharedQuizzes(this.sharedQuizzes);
+                        
+                        return {
+                            success: true,
+                            message: 'Đã xóa quiz khỏi Supabase'
+                        };
+                    }
+                } catch (error) {
+                    console.error('Supabase delete failed:', error);
+                    
+                    // Nếu lỗi permission, thông báo rõ ràng
+                    if (error.message && error.message.includes('permission')) {
+                        throw new Error('Bạn không có quyền xóa bài này. Vui lòng kiểm tra RLS policy trong Supabase.');
+                    }
+                    
+                    // Nếu Supabase fail, thử Local Server
+                    console.warn('Trying Local Server...');
+                }
+            }
+
+            // Fallback sang Local Server
+            if (this.isServerOnline) {
+                try {
+                    const response = await fetch(`${this.API_BASE_URL}/shared-quizzes/${quizId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        console.log('✅ Deleted from Local Server successfully');
+                        
+                        // Xóa khỏi danh sách local
+                        this.sharedQuizzes = this.sharedQuizzes.filter(q => q.id !== quizId);
+                        
+                        // Xóa khỏi offline storage
+                        this.removeFromOfflineStorage(quizId);
+                        
+                        // Render lại danh sách
+                        this.renderSharedQuizzes(this.sharedQuizzes);
+                        
+                        return {
+                            success: true,
+                            message: 'Đã xóa quiz khỏi Local Server'
+                        };
+                    } else {
+                        throw new Error(data.error || 'Không thể xóa quiz từ server');
+                    }
+                } catch (error) {
+                    console.error('Local Server delete failed:', error);
+                    throw error;
+                }
+            }
+
+            // Nếu cả 2 đều không khả dụng, xóa offline
+            console.log('📱 Deleting from offline storage only');
+            this.removeFromOfflineStorage(quizId);
+            this.sharedQuizzes = this.sharedQuizzes.filter(q => q.id !== quizId);
+            this.renderSharedQuizzes(this.sharedQuizzes);
+            
+            return {
+                success: true,
+                message: 'Đã xóa quiz khỏi bộ nhớ local'
+            };
+
+        } catch (error) {
+            console.error('❌ Error deleting shared quiz:', error);
+            throw error;
+        }
+    }
+
+    // Xóa quiz khỏi offline storage
+    removeFromOfflineStorage(quizId) {
+        try {
+            const offlineQuizzes = JSON.parse(localStorage.getItem('offlineSharedQuizzes')) || [];
+            const updatedQuizzes = offlineQuizzes.filter(q => q.id !== quizId && q.originalId !== quizId);
+            localStorage.setItem('offlineSharedQuizzes', JSON.stringify(updatedQuizzes));
+            console.log('✅ Removed from offline storage');
+        } catch (error) {
+            console.error('Error removing from offline storage:', error);
         }
     }
 
