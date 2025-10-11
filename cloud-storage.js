@@ -13,13 +13,16 @@ class CloudQuizManager {
 
     // Khởi động auto-sync
     startAutoSync() {
-        // Sync mỗi 30 giây
-        this.syncInterval = setInterval(() => {
-            this.syncWithCloud();
-        }, 30000);
+        // VÔ HIỆU HÓA AUTO-SYNC để tránh lỗi 500 từ npoint.io
+        // Chỉ sử dụng localStorage và Supabase
+        console.log('⚠️ Cloud storage (npoint.io) disabled - Using localStorage and Supabase only');
+        this.isOnline = false;
         
-        // Sync ngay lập tức
-        this.syncWithCloud();
+        // KHÔNG sync với npoint.io nữa
+        // this.syncInterval = setInterval(() => {
+        //     this.syncWithCloud();
+        // }, 30000);
+        // this.syncWithCloud();
     }
 
     // Dừng auto-sync
@@ -30,43 +33,11 @@ class CloudQuizManager {
         }
     }
 
-    // Sync với cloud
+    // Sync với cloud - VÔ HIỆU HÓA
     async syncWithCloud() {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 giây timeout
-            
-            const response = await fetch(this.SYNC_URL, {
-                signal: controller.signal
-            });
-            
-            clearTimeout(timeoutId);
-            
-            if (response.ok) {
-                const cloudData = await response.json();
-                const localData = this.getLocalQuizzes();
-                
-                // Merge: Ưu tiên quiz mới hơn
-                const merged = this.mergeQuizzes(localData, cloudData.quizzes || []);
-                
-                // Lưu vào localStorage
-                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(merged));
-                
-                console.log('✅ Synced with cloud:', merged.length, 'quizzes');
-                this.isOnline = true;
-                return merged;
-            } else {
-                console.warn('⚠️ Cloud API returned error:', response.status);
-                this.isOnline = false;
-            }
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                console.warn('⏱️ Cloud sync timeout, using local data');
-            } else {
-                console.warn('⚠️ Cloud sync failed:', error.message);
-            }
-            this.isOnline = false;
-        }
+        // KHÔNG sync với npoint.io nữa vì service đã ngừng hoạt động
+        // Chỉ trả về dữ liệu local
+        this.isOnline = false;
         return this.getLocalQuizzes();
     }
 
@@ -141,20 +112,11 @@ class CloudQuizManager {
         }
     }
 
-    // Upload lên cloud
+    // Upload lên cloud - VÔ HIỆU HÓA
     async uploadToCloud(quizzes) {
-        try {
-            await fetch(this.SYNC_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    quizzes: quizzes,
-                    updated: new Date().toISOString()
-                })
-            });
-        } catch (error) {
-            throw error;
-        }
+        // KHÔNG upload lên npoint.io nữa
+        // Chỉ lưu local và Supabase
+        return Promise.resolve();
     }
 
     // Lấy tất cả quiz

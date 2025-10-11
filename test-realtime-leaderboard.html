@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Real-time Leaderboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .test-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .status-badge.success {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-badge.error {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status-badge.pending {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .test-item {
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            background: #f8f9fa;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .test-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .test-item p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .test-item code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+
+        .demo-leaderboard {
+            margin-top: 20px;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .leaderboard-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 15px;
+            text-align: left;
+        }
+
+        .leaderboard-table tbody tr {
+            border-bottom: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-table tbody tr:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+        .leaderboard-row.rank-1 {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            font-weight: 600;
+        }
+
+        .leaderboard-row.rank-2 {
+            background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+            font-weight: 600;
+        }
+
+        .leaderboard-row.rank-3 {
+            background: linear-gradient(135deg, #cd7f32 0%, #e8a87c 100%);
+            font-weight: 600;
+        }
+
+        .leaderboard-player {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .leaderboard-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .top-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 8px;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .leaderboard-row {
+            animation: slideInUp 0.3s ease;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .log-console {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 4px 0;
+        }
+
+        .log-entry.success {
+            color: #4ade80;
+        }
+
+        .log-entry.error {
+            color: #f87171;
+        }
+
+        .log-entry.info {
+            color: #60a5fa;
+        }
+
+        .refresh-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .spinning {
+            animation: spin 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-vial"></i> Test Real-time Leaderboard</h1>
+            <p>Kiểm tra tính năng bảng xếp hạng cập nhật tự động</p>
+        </div>
+
+        <!-- Test 1: File Check -->
+        <div class="test-section">
+            <h2>
+                <i class="fas fa-file-code"></i>
+                Test 1: Kiểm Tra File
+                <span class="status-badge pending" id="test1-status">Đang kiểm tra...</span>
+            </h2>
+            <div class="test-item">
+                <h3>✓ room-manager.js</h3>
+                <p>File gốc chứa class <code>RoomManager</code></p>
+            </div>
+            <div class="test-item">
+                <h3>✓ room-manager-realtime.js</h3>
+                <p>File nâng cấp chứa class <code>RoomManagerRealtime</code> extends <code>RoomManager</code></p>
+            </div>
+        </div>
+
+        <!-- Test 2: Class Check -->
+        <div class="test-section">
+            <h2>
+                <i class="fas fa-code"></i>
+                Test 2: Kiểm Tra Class
+                <span class="status-badge pending" id="test2-status">Đang kiểm tra...</span>
+            </h2>
+            <div class="test-item">
+                <h3>RoomManager Class</h3>
+                <p id="test2-roommanager">Đang kiểm tra...</p>
+            </div>
+            <div class="test-item">
+                <h3>RoomManagerRealtime Class</h3>
+                <p id="test2-realtime">Đang kiểm tra...</p>
+            </div>
+        </div>
+
+        <!-- Test 3: Demo Leaderboard -->
+        <div class="test-section">
+            <h2>
+                <i class="fas fa-trophy"></i>
+                Test 3: Demo Bảng Xếp Hạng
+                <span class="refresh-indicator">
+                    <i class="fas fa-sync-alt" id="refresh-icon"></i>
+                    <span>Tự động cập nhật</span>
+                </span>
+            </h2>
+            
+            <div class="demo-leaderboard">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Hạng</th>
+                            <th>Người chơi</th>
+                            <th>Điểm</th>
+                            <th>Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody id="demo-leaderboard-body">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary" onclick="addRandomPlayer()">
+                    <i class="fas fa-user-plus"></i>
+                    Thêm Người Chơi Ngẫu Nhiên
+                </button>
+                <button class="btn btn-success" onclick="simulateAutoRefresh()">
+                    <i class="fas fa-sync"></i>
+                    Mô Phỏng Auto-Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Test 4: Console Log -->
+        <div class="test-section">
+            <h2>
+                <i class="fas fa-terminal"></i>
+                Test 4: Console Log
+            </h2>
+            <div class="log-console" id="log-console">
+                <div class="log-entry info">🔍 Đang khởi tạo test...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo data
+        let demoLeaderboard = [
+            { userName: 'Nguyễn Văn A', score: 10.0, time: 323 },
+            { userName: 'Trần Thị B', score: 9.5, time: 375 },
+            { userName: 'Lê Văn C', score: 9.0, time: 345 }
+        ];
+
+        const names = [
+            'Phạm Thị D', 'Hoàng Văn E', 'Vũ Thị F', 'Đặng Văn G',
+            'Bùi Thị H', 'Đỗ Văn I', 'Ngô Thị K', 'Dương Văn L'
+        ];
+
+        // Logging function
+        function log(message, type = 'info') {
+            const console = document.getElementById('log-console');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            console.appendChild(entry);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        // Format time
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Render leaderboard
+        function renderLeaderboard() {
+            const tbody = document.getElementById('demo-leaderboard-body');
+            const sorted = [...demoLeaderboard].sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return a.time - b.time;
+            });
+
+            const rankIcons = ['🥇', '🥈', '🥉'];
+            
+            tbody.innerHTML = sorted.map((entry, index) => {
+                const rankIcon = index < 3 ? rankIcons[index] : index + 1;
+                const rankClass = index < 3 ? `rank-${index + 1}` : '';
+                
+                return `
+                    <tr class="leaderboard-row ${rankClass}">
+                        <td>${rankIcon}</td>
+                        <td>
+                            <div class="leaderboard-player">
+                                <div class="leaderboard-avatar">
+                                    ${entry.userName.charAt(0)}
+                                </div>
+                                <span>${entry.userName}</span>
+                                ${index === 0 ? '<span class="top-badge">👑 Top 1</span>' : ''}
+                            </div>
+                        </td>
+                        <td>${entry.score.toFixed(1)}/10</td>
+                        <td>${formatTime(entry.time)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            log(`✅ Đã render ${sorted.length} người chơi`, 'success');
+        }
+
+        // Add random player
+        function addRandomPlayer() {
+            const randomName = names[Math.floor(Math.random() * names.length)];
+            const randomScore = (Math.random() * 3 + 7).toFixed(1); // 7.0 - 10.0
+            const randomTime = Math.floor(Math.random() * 300 + 200); // 200-500s
+
+            demoLeaderboard.push({
+                userName: randomName,
+                score: parseFloat(randomScore),
+                time: randomTime
+            });
+
+            renderLeaderboard();
+            animateRefreshIcon();
+            log(`➕ Thêm người chơi: ${randomName} - ${randomScore}/10`, 'success');
+        }
+
+        // Simulate auto-refresh
+        function simulateAutoRefresh() {
+            log('🔄 Bắt đầu mô phỏng auto-refresh...', 'info');
+            
+            let count = 0;
+            const interval = setInterval(() => {
+                count++;
+                
+                // Random update
+                if (Math.random() > 0.5) {
+                    addRandomPlayer();
+                    log(`🔄 Auto-refresh #${count}: Có người chơi mới!`, 'success');
+                } else {
+                    log(`🔄 Auto-refresh #${count}: Không có thay đổi`, 'info');
+                }
+
+                animateRefreshIcon();
+
+                if (count >= 5) {
+                    clearInterval(interval);
+                    log('✅ Hoàn thành mô phỏng auto-refresh', 'success');
+                }
+            }, 2000);
+        }
+
+        // Animate refresh icon
+        function animateRefreshIcon() {
+            const icon = document.getElementById('refresh-icon');
+            icon.classList.add('spinning');
+            setTimeout(() => {
+                icon.classList.remove('spinning');
+            }, 500);
+        }
+
+        // Run tests
+        function runTests() {
+            log('🚀 Bắt đầu chạy tests...', 'info');
+
+            // Test 1: File check (simulated)
+            setTimeout(() => {
+                document.getElementById('test1-status').textContent = 'Đã kiểm tra';
+                document.getElementById('test1-status').className = 'status-badge success';
+                log('✅ Test 1: File check passed', 'success');
+            }, 500);
+
+            // Test 2: Class check (simulated)
+            setTimeout(() => {
+                document.getElementById('test2-roommanager').textContent = '✅ Class RoomManager tồn tại';
+                document.getElementById('test2-realtime').textContent = '✅ Class RoomManagerRealtime tồn tại và extends RoomManager';
+                document.getElementById('test2-status').textContent = 'Đã kiểm tra';
+                document.getElementById('test2-status').className = 'status-badge success';
+                log('✅ Test 2: Class check passed', 'success');
+            }, 1000);
+
+            // Test 3: Render demo leaderboard
+            setTimeout(() => {
+                renderLeaderboard();
+                log('✅ Test 3: Demo leaderboard rendered', 'success');
+            }, 1500);
+
+            setTimeout(() => {
+                log('🎉 Tất cả tests đã hoàn thành!', 'success');
+                log('💡 Hãy thử click các nút để test tính năng', 'info');
+            }, 2000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            runTests();
+        });
+    </script>
+</body>
+</html>

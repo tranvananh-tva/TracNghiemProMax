@@ -527,6 +527,13 @@ class QuizManager {
             totalQuestions: finalQuestions.length
         };
         this.currentAnswers = {};
+        // Backup current quiz to allow restore if needed
+        try {
+            this._quizBackup = JSON.parse(JSON.stringify(this.currentQuiz));
+            localStorage.setItem('quizBackup', JSON.stringify(this.currentQuiz));
+        } catch (e) {
+            console.warn('Backup currentQuiz failed:', e);
+        }
 
         if (shouldShuffle && questionsClone.length >= 2) {
             this.showToast('🔀 Đã xáo trộn câu hỏi!', 'info');
@@ -698,6 +705,22 @@ class QuizManager {
         // Ghi nhận hoàn thành quiz cho streak tracking
         if (typeof recordQuizCompletion === 'function') {
             recordQuizCompletion();
+        }
+
+        // Nếu là quiz từ phòng thi, lưu vào leaderboard
+        if (this.currentQuiz.isRoomQuiz && this.currentQuiz.roomId && this.currentQuiz.userName) {
+            const roomResult = {
+                userName: this.currentQuiz.userName,
+                score: score,
+                correctCount: correctCount,
+                totalQuestions: this.currentQuiz.totalQuestions,
+                totalTime: totalTime
+            };
+            
+            // Lưu vào leaderboard
+            if (window.roomManager) {
+                window.roomManager.saveResultToLeaderboard(this.currentQuiz.roomId, roomResult);
+            }
         }
 
         this.showToast('🎉 Đã nộp bài thành công!', 'success');
@@ -948,6 +971,10 @@ class QuizManager {
     }
 }
 
+// Expose QuizManager to window for patches that access window.QuizManager
+if (typeof window !== 'undefined' && typeof window.QuizManager === 'undefined') {
+    window.QuizManager = QuizManager;
+}
 // Initialize the quiz manager when page loads
 let quizManager;
 document.addEventListener('DOMContentLoaded', () => {

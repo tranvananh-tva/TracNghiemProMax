@@ -1,27 +1,69 @@
-// Modern Quiz Layout - Additional Functions
-// Add these functions to your existing QuizManager class
+// ============================================================================
+// MODERN QUIZ LAYOUT - FIXED VERSION
+// ============================================================================
+// Khắc phục lỗi currentQuiz bị null khi làm bài từ thiết bị khác
+// ============================================================================
 
-// Replace the renderQuiz method with this modern version
+// ⭐ THÊM VÀO QUIZMANAGER CLASS
 QuizManager.prototype.renderQuizModern = function() {
-    // Kiểm tra currentQuiz có tồn tại không
+    console.log('🎨 renderQuizModern called');
+    
+    // ⭐ KIỂM TRA VÀ KHÔI PHỤC CURRENTQUIZ
     if (!this.currentQuiz || !this.currentQuiz.questions) {
         console.error('❌ Cannot render quiz: currentQuiz is null');
-        const container = document.getElementById('quiz-container');
-        if (container) {
-            container.innerHTML = `
-                <div class="quiz-placeholder">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #f59e0b;"></i>
-                    <h3>Lỗi tải bài thi</h3>
-                    <p>Không thể tải bài thi. Vui lòng thử lại.</p>
-                    <button class="btn-primary" onclick="location.reload()">
-                        <i class="fas fa-sync"></i>
-                        Tải lại trang
-                    </button>
-                </div>
-            `;
+        
+        // Thử khôi phục từ backup
+        if (this._quizBackup && this._quizBackup.questions) {
+            console.log('🔄 Restoring from _quizBackup...');
+            this.currentQuiz = JSON.parse(JSON.stringify(this._quizBackup));
         }
-        return;
+        // Thử khôi phục từ localStorage
+        else if (typeof restoreQuizFromBackup === 'function' && restoreQuizFromBackup()) {
+            console.log('🔄 Restored from localStorage backup');
+        }
+        // Thử khôi phục từ roomManager
+        else if (window.roomManager && window.roomManager.currentRoom && window.roomManager.currentRoom.quiz) {
+            console.log('🔄 Restoring from roomManager...');
+            const room = window.roomManager.currentRoom;
+            this.currentQuiz = {
+                id: room.quiz.id,
+                title: room.quiz.title,
+                description: room.quiz.description || '',
+                questions: JSON.parse(JSON.stringify(room.quiz.questions)),
+                totalQuestions: room.quiz.totalQuestions || room.quiz.questions.length,
+                isRoomQuiz: true,
+                roomId: room.id,
+                roomCode: room.code,
+                roomName: room.name,
+                userName: room.userName
+            };
+            this._quizBackup = JSON.parse(JSON.stringify(this.currentQuiz));
+        }
+        
+        // Nếu vẫn không khôi phục được
+        if (!this.currentQuiz || !this.currentQuiz.questions) {
+            const container = document.getElementById('quiz-container');
+            if (container) {
+                container.innerHTML = `
+                    <div class="quiz-placeholder">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #f59e0b;"></i>
+                        <h3>Lỗi tải bài thi</h3>
+                        <p>Không thể tải bài thi. Vui lòng thử lại.</p>
+                        <button class="btn-primary" onclick="location.reload()">
+                            <i class="fas fa-sync"></i>
+                            Tải lại trang
+                        </button>
+                    </div>
+                `;
+            }
+            return;
+        }
     }
+
+    console.log('✅ Quiz data validated:', {
+        title: this.currentQuiz.title,
+        questionCount: this.currentQuiz.questions.length
+    });
 
     const container = document.getElementById('quiz-container');
     this.currentQuestionIndex = 0;
@@ -31,8 +73,9 @@ QuizManager.prototype.renderQuizModern = function() {
             <!-- Left Sidebar -->
             <div class="quiz-sidebar-left">
                 <div class="quiz-info-card">
-                    <h3 class="quiz-title-sidebar">${this.currentQuiz.title}</h3>
-                    <p class="quiz-mode">Chế độ: Ôn thi</p>
+                    <h3 class="quiz-title-sidebar">${this.escapeHtml(this.currentQuiz.title)}</h3>
+                    <p class="quiz-mode">Chế độ: ${this.currentQuiz.isRoomQuiz ? 'Phòng thi' : 'Ôn thi'}</p>
+                    ${this.currentQuiz.isRoomQuiz ? `<p class="quiz-room-info"><i class="fas fa-door-open"></i> ${this.escapeHtml(this.currentQuiz.roomName)}</p>` : ''}
                 </div>
                 
                 <div class="quiz-timer-card">
@@ -64,8 +107,8 @@ QuizManager.prototype.renderQuizModern = function() {
                                 <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%"></div>
                             </div>
                             <div class="progress-details">
-                                <span class="correct-count">Đúng: <strong id="correct-count">0</strong></span>
-                                <span class="wrong-count">Sai: <strong id="wrong-count">0</strong></span>
+                                <span class="correct-count">Đã trả lời: <strong id="answered-count">0</strong></span>
+                                <span class="wrong-count">Còn lại: <strong id="remaining-count">${this.currentQuiz.totalQuestions}</strong></span>
                             </div>
                         </div>
                     </div>
@@ -118,31 +161,65 @@ QuizManager.prototype.renderQuizModern = function() {
     `;
 
     container.innerHTML = quizHTML;
-    this.startTimer();
-    this.updateProgressBar();
+    
+    // Start timer
+    if (typeof this.startTimerModern === 'function') {
+        this.startTimerModern();
+    } else if (typeof this.startTimer === 'function') {
+        this.startTimer();
+    }
+    
+    // Update progress
+    if (typeof this.updateProgressBarModern === 'function') {
+        this.updateProgressBarModern();
+    } else if (typeof this.updateProgressBar === 'function') {
+        this.updateProgressBar();
+    }
+    
     this.updateNavigationButtons();
+    
+    console.log('✅ Quiz rendered successfully');
 };
 
 QuizManager.prototype.renderQuestion = function(index) {
-    // Kiểm tra currentQuiz có tồn tại không
+    console.log(`🎨 renderQuestion called for index ${index}`);
+    
+    // ⭐ KIỂM TRA VÀ KHÔI PHỤC
     if (!this.currentQuiz || !this.currentQuiz.questions) {
-        console.error('❌ currentQuiz is null or has no questions');
-        return `
-            <div class="question-card-modern">
-                <div class="question-text-modern" style="text-align: center; padding: 40px;">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f59e0b; margin-bottom: 20px;"></i>
-                    <h3>Lỗi tải câu hỏi</h3>
-                    <p>Không thể tải câu hỏi. Vui lòng thử lại.</p>
-                    <button class="btn-primary" onclick="location.reload()">
-                        <i class="fas fa-sync"></i>
-                        Tải lại trang
-                    </button>
+        console.error('❌ currentQuiz is null in renderQuestion');
+        
+        // Thử khôi phục
+        if (this._quizBackup && this._quizBackup.questions) {
+            this.currentQuiz = JSON.parse(JSON.stringify(this._quizBackup));
+            console.log('✅ Restored from backup in renderQuestion');
+        } else if (typeof restoreQuizFromBackup === 'function') {
+            restoreQuizFromBackup();
+        }
+        
+        // Nếu vẫn không có
+        if (!this.currentQuiz || !this.currentQuiz.questions) {
+            return `
+                <div class="question-card-modern">
+                    <div class="question-text-modern" style="text-align: center; padding: 40px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f59e0b; margin-bottom: 20px;"></i>
+                        <h3>Lỗi tải câu hỏi</h3>
+                        <p>Không thể tải câu hỏi. Vui lòng thử lại.</p>
+                        <button class="btn-primary" onclick="location.reload()">
+                            <i class="fas fa-sync"></i>
+                            Tải lại trang
+                        </button>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
 
     const question = this.currentQuiz.questions[index];
+    if (!question) {
+        console.error(`❌ Question at index ${index} not found`);
+        return '<div class="question-card-modern"><p>Lỗi: Không tìm thấy câu hỏi</p></div>';
+    }
+    
     const userAnswer = this.currentAnswers[index];
     
     return `
@@ -150,7 +227,7 @@ QuizManager.prototype.renderQuestion = function(index) {
             <div class="question-header-modern">
                 <span class="question-label">Câu ${index + 1}</span>
             </div>
-            <div class="question-text-modern">${question.question}</div>
+            <div class="question-text-modern">${this.escapeHtml(question.question)}</div>
             <div class="options-modern">
                 ${question.options.map(option => `
                     <label class="option-modern ${userAnswer === option.letter ? 'selected' : ''}" 
@@ -162,7 +239,7 @@ QuizManager.prototype.renderQuestion = function(index) {
                                ${userAnswer === option.letter ? 'checked' : ''}
                                onchange="quizManager.updateAnswerModern(${index}, '${option.letter}')">
                         <span class="option-letter">${option.letter}.</span>
-                        <span class="option-text">${option.text}</span>
+                        <span class="option-text">${this.escapeHtml(option.text)}</span>
                     </label>
                 `).join('')}
             </div>
@@ -171,14 +248,28 @@ QuizManager.prototype.renderQuestion = function(index) {
 };
 
 QuizManager.prototype.goToQuestion = function(index) {
-    // Kiểm tra currentQuiz có tồn tại không
+    console.log(`📍 goToQuestion called for index ${index}`);
+    
+    // ⭐ KIỂM TRA VÀ KHÔI PHỤC
     if (!this.currentQuiz || !this.currentQuiz.questions) {
         console.error('❌ Cannot go to question: currentQuiz is null');
-        return;
+        if (this._quizBackup && this._quizBackup.questions) {
+            this.currentQuiz = JSON.parse(JSON.stringify(this._quizBackup));
+            console.log('✅ Restored from backup in goToQuestion');
+        } else if (typeof restoreQuizFromBackup === 'function') {
+            restoreQuizFromBackup();
+        }
+        
+        if (!this.currentQuiz || !this.currentQuiz.questions) {
+            return;
+        }
     }
 
     this.currentQuestionIndex = index;
-    document.getElementById('question-display').innerHTML = this.renderQuestion(index);
+    const questionDisplay = document.getElementById('question-display');
+    if (questionDisplay) {
+        questionDisplay.innerHTML = this.renderQuestion(index);
+    }
     
     // Update active state in grid
     document.querySelectorAll('.question-grid-item').forEach((btn, i) => {
@@ -191,6 +282,9 @@ QuizManager.prototype.goToQuestion = function(index) {
 QuizManager.prototype.nextQuestion = function() {
     if (!this.currentQuiz || !this.currentQuiz.questions) {
         console.error('❌ Cannot go to next question: currentQuiz is null');
+        if (typeof restoreQuizFromBackup === 'function') {
+            restoreQuizFromBackup();
+        }
         return;
     }
     
@@ -203,6 +297,9 @@ QuizManager.prototype.nextQuestion = function() {
 QuizManager.prototype.previousQuestion = function() {
     if (!this.currentQuiz || !this.currentQuiz.questions) {
         console.error('❌ Cannot go to previous question: currentQuiz is null');
+        if (typeof restoreQuizFromBackup === 'function') {
+            restoreQuizFromBackup();
+        }
         return;
     }
     
@@ -242,22 +339,12 @@ QuizManager.prototype.updateAnswerModern = function(questionIndex, selectedAnswe
             this.currentQuiz = JSON.parse(JSON.stringify(this._quizBackup));
             console.log('✅ Quiz data restored from _quizBackup');
         }
-        // Thử khôi ph���c từ localStorage
-        else {
-            try {
-                const backupQuiz = localStorage.getItem('currentRoomQuiz');
-                if (backupQuiz) {
-                    const quizData = JSON.parse(backupQuiz);
-                    this.currentQuiz = quizData;
-                    this._quizBackup = JSON.parse(JSON.stringify(quizData));
-                    console.log('✅ Quiz data restored from localStorage');
-                }
-            } catch (error) {
-                console.error('Failed to restore from localStorage:', error);
-            }
+        // Thử khôi phục từ localStorage
+        else if (typeof restoreQuizFromBackup === 'function' && restoreQuizFromBackup()) {
+            console.log('✅ Quiz data restored from localStorage');
         }
         // Thử khôi phục từ roomManager
-        if ((!this.currentQuiz || !this.currentQuiz.questions) && window.roomManager && window.roomManager.currentRoom && window.roomManager.currentRoom.quiz) {
+        else if (window.roomManager && window.roomManager.currentRoom && window.roomManager.currentRoom.quiz) {
             const room = window.roomManager.currentRoom;
             this.currentQuiz = {
                 id: room.quiz.id,
@@ -274,14 +361,9 @@ QuizManager.prototype.updateAnswerModern = function(questionIndex, selectedAnswe
             // Backup lại
             this._quizBackup = JSON.parse(JSON.stringify(this.currentQuiz));
             console.log('✅ Quiz data restored from roomManager and backed up');
-        }
-        
-        // Nếu vẫn không khôi phục được
-        if (!this.currentQuiz || !this.currentQuiz.questions) {
+        } else {
             console.error('❌ Cannot restore quiz data - no backup available');
-            if (window.quizManager && window.quizManager.showToast) {
-                window.quizManager.showToast('❌ Lỗi: Mất dữ liệu bài thi. Vui lòng tải lại trang!', 'error');
-            }
+            this.showToast('❌ Lỗi: Mất dữ liệu bài thi. Vui lòng tải lại trang!', 'error');
             return;
         }
     }
@@ -332,10 +414,8 @@ QuizManager.prototype.updateAnswerModern = function(questionIndex, selectedAnswe
                 this.nextQuestion();
             } else {
                 console.error('❌ currentQuiz lost before auto-next');
-                // Thử khôi phục lại
-                if (this._quizBackup && this._quizBackup.questions) {
-                    this.currentQuiz = JSON.parse(JSON.stringify(this._quizBackup));
-                    this.nextQuestion();
+                if (typeof restoreQuizFromBackup === 'function') {
+                    restoreQuizFromBackup();
                 }
             }
         }, 500);
@@ -347,6 +427,16 @@ QuizManager.prototype.confirmExitQuiz = function() {
         clearInterval(this.timerInterval);
         this.currentQuiz = null;
         this.currentAnswers = {};
+        this._quizBackup = null;
+        
+        // Xóa backup từ localStorage
+        try {
+            localStorage.removeItem('currentRoomQuiz');
+            localStorage.removeItem('currentRoomData');
+        } catch (error) {
+            console.warn('Failed to clear backup:', error);
+        }
+        
         document.getElementById('quiz-container').innerHTML = `
             <div class="quiz-placeholder">
                 <i class="fas fa-clipboard-list"></i>
@@ -384,6 +474,8 @@ QuizManager.prototype.updateProgressBarModern = function() {
     
     const progressBarFill = document.getElementById('progress-bar-fill');
     const progressPercentage = document.getElementById('progress-percentage');
+    const answeredCountEl = document.getElementById('answered-count');
+    const remainingCountEl = document.getElementById('remaining-count');
     
     if (progressBarFill) {
         progressBarFill.style.width = percentage + '%';
@@ -392,4 +484,35 @@ QuizManager.prototype.updateProgressBarModern = function() {
     if (progressPercentage) {
         progressPercentage.textContent = answeredCount;
     }
+    
+    if (answeredCountEl) {
+        answeredCountEl.textContent = answeredCount;
+    }
+    
+    if (remainingCountEl) {
+        remainingCountEl.textContent = totalQuestions - answeredCount;
+    }
 };
+
+// ⭐ THÊM ESCAPE HTML FUNCTION NẾU CHƯA CÓ
+if (!QuizManager.prototype.escapeHtml) {
+    QuizManager.prototype.escapeHtml = function(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    };
+}
+
+// ⭐ PERIODIC CHECK ĐỂ ĐẢM BẢO CURRENTQUIZ KHÔNG BỊ MẤT
+setInterval(() => {
+    if (window.quizManager && window.quizManager.currentQuiz) {
+        // Nếu có currentQuiz nhưng không có backup, tạo backup
+        if (!window.quizManager._quizBackup) {
+            window.quizManager._quizBackup = JSON.parse(JSON.stringify(window.quizManager.currentQuiz));
+            console.log('🔄 Created backup of currentQuiz');
+        }
+    }
+}, 5000); // Check mỗi 5 giây
+
+console.log('✅ Modern Quiz Layout - Fixed Version loaded');

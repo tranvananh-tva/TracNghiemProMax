@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-adsense-account" content="ca-pub-1617450652619669">
     <title>QuizTva Studio - Hệ Thống Trắc Nghiệm Thông Minh</title>
     <link rel="icon" type="image/png" href="https://anhtran.id.vn/wp-content/uploads/2025/09/cropped-Generated-Image-September-18-2025-8_04PM-1.png">
     <link rel="stylesheet" href="style.css">
@@ -16,6 +17,7 @@
     <link rel="stylesheet" href="style-streak.css">
     <link rel="stylesheet" href="style-explore.css">
     <link rel="stylesheet" href="style-analytics.css">
+    <link rel="stylesheet" href="style-room.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- JSZip library for reading Word files -->
@@ -72,6 +74,10 @@
                         <a href="#" class="nav-item" data-tab="ai-quiz">
                             <i class="fas fa-robot"></i>
                             <span>AI Tạo Quiz</span>
+                        </a>
+                        <a href="#" class="nav-item" data-tab="room">
+                            <i class="fas fa-door-open"></i>
+                            <span>Tạo Phòng Thi</span>
                         </a>
                         <a href="#" class="nav-item" data-tab="explore">
                             <i class="fas fa-compass"></i>
@@ -480,21 +486,32 @@
                         <small>Tên này sẽ hiển thị khi bạn chia sẻ đề thi</small>
                     </div>
 
-                    <!-- Search Bar -->
-                    <div class="explore-header">
-                        <div class="explore-search-bar">
-                            <input type="text"
-                                   id="search-shared-quiz"
-                                   placeholder="Tìm kiếm đề thi theo tên, mô tả, người tạo..."
-                                   class="explore-search-input">
-                            <button class="btn-search" id="search-shared-quiz-btn">
-                                <i class="fas fa-search"></i>
-                                Tìm kiếm
-                            </button>
+                    <!-- Join Room Section -->
+                    <div class="room-join-section">
+                        <div class="room-join-header">
+                            <h2><i class="fas fa-sign-in-alt"></i> Nhập Phòng Thi</h2>
+                            <p>Nhập mã phòng 6 số để tham gia phòng thi</p>
                         </div>
+                        <div class="room-join-form">
+                            <div class="room-join-input-group">
+                                <input type="text"
+                                       id="join-room-code-input"
+                                       placeholder="Nhập mã phòng..."
+                                       maxlength="6"
+                                       class="form-input">
+                                <button class="btn-join-room" id="btn-join-room">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    Vào Phòng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Refresh Button -->
+                    <div class="explore-header" style="margin-top: 20px;">
                         <button class="btn-refresh" id="refresh-shared-quizzes">
                             <i class="fas fa-sync-alt"></i>
-                            Làm mới
+                            Làm mới danh sách
                         </button>
                     </div>
 
@@ -510,6 +527,120 @@
                             <i class="fas fa-compass"></i>
                             <h3>Đang tải đề thi...</h3>
                             <p>Vui lòng đợi trong giây lát</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Room Tab - Tạo Phòng Thi -->
+                <section id="room-tab" class="tab-content">
+                    <div class="page-header">
+                        <h2 class="page-title">
+                            <i class="fas fa-door-open"></i>
+                            Tạo Phòng Thi
+                        </h2>
+                        <p style="margin-top: 10px; opacity: 0.9;">
+                            Tạo phòng thi riêng để chia sẻ với lớp học mà không cần chia sẻ lên cộng đồng
+                        </p>
+                    </div>
+
+                    <!-- Room Creation Section -->
+                    <div class="room-creation-section">
+                        <div class="room-creation-header">
+                            <i class="fas fa-plus-circle"></i>
+                            <h3>Tạo Phòng Thi Mới</h3>
+                        </div>
+
+                        <div class="room-form-grid">
+                            <div class="room-form-group">
+                                <label>
+                                    <i class="fas fa-signature"></i>
+                                    Tên phòng <span style="color: red;">*</span>
+                                </label>
+                                <input type="text"
+                                       id="room-name-input"
+                                       placeholder="Ví dụ: Kiểm tra Toán 10 - Chương 1"
+                                       maxlength="100">
+                            </div>
+
+                            <div class="room-form-group">
+                                <label>
+                                    <i class="fas fa-key"></i>
+                                    Mã phòng (6 số) <span style="color: red;">*</span>
+                                </label>
+                                <div class="room-code-generator">
+                                    <input type="text"
+                                           id="room-code-input"
+                                           placeholder="Nhập hoặc tạo tự động"
+                                           maxlength="6"
+                                           pattern="[0-9]{6}">
+                                    <button class="btn-generate-code" id="btn-generate-room-code">
+                                        <i class="fas fa-random"></i>
+                                        Tạo mã
+                                    </button>
+                                </div>
+                                <small class="room-code-note">
+                                    Mã phòng dùng để người khác tham gia
+                                </small>
+                            </div>
+
+                            <div class="room-form-group room-quiz-selector">
+                                <label>
+                                    <i class="fas fa-book"></i>
+                                    Chọn đề thi <span style="color: red;">*</span>
+                                </label>
+                                <select id="room-quiz-selector">
+                                    <option value="">-- Chọn đề thi từ Quản lý Quiz --</option>
+                                </select>
+                                <small class="room-code-note">
+                                    Đề thi phải được tạo trước trong mục "Quản lý Quiz"
+                                </small>
+                            </div>
+
+                            <div class="room-form-group" style="grid-column: 1 / -1;">
+                                <label>
+                                    <i class="fas fa-align-left"></i>
+                                    Mô tả phòng
+                                </label>
+                                <textarea id="room-description-input"
+                                          placeholder="Mô tả ngắn gọn về phòng thi này..."
+                                          rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="room-actions">
+                            <button class="btn-create-room" id="btn-create-room">
+                                <i class="fas fa-plus-circle"></i>
+                                Tạo Phòng Thi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- My Rooms Section -->
+                    <div class="my-rooms-section">
+                        <div class="my-rooms-header">
+                            <h3>
+                                <i class="fas fa-list"></i>
+                                Phòng Thi Của Tôi
+                            </h3>
+                            <button class="btn-refresh" id="refresh-my-rooms">
+                                <i class="fas fa-sync-alt"></i>
+                                Làm mới
+                            </button>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div id="rooms-loading" class="room-loading" style="display: none;">
+                            <div class="room-loading-spinner"></div>
+                            <div class="room-loading-text">Đang tải phòng thi...</div>
+                        </div>
+
+                        <!-- Rooms Grid -->
+                        <div class="rooms-grid" id="my-rooms-grid">
+                            <div class="rooms-empty-state">
+                                <i class="fas fa-door-open"></i>
+                                <h3>Chưa có phòng thi nào</h3>
+                                <p>Hãy tạo phòng thi đầu tiên của bạn!</p>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -690,6 +821,24 @@
         </div>
     </div>
 
+    <!-- Room Details Modal -->
+    <div id="room-details-modal" class="room-details-modal">
+        <div class="room-details-content">
+            <div class="room-details-modal-content">
+                <!-- Content will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- User Name Modal -->
+    <div id="user-name-modal" class="user-name-modal">
+        <div class="user-name-content">
+            <div class="user-name-modal-content">
+                <!-- Content will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
     <!-- Modal for sharing quiz -->
     <div id="share-quiz-modal" class="modal">
         <div class="modal-overlay" onclick="exploreQuizManager.closeShareModal()"></div>
@@ -793,6 +942,8 @@
 
     <script src="script.js"></script>
     <script src="script-modern.js"></script>
+    <!-- PATCH: Fix updateAnswerModern - MUST BE RIGHT AFTER script-modern.js -->
+    <script src="PATCH_UPDATE_ANSWER.js"></script>
     <script src="script-updated.js"></script>
     <script src="ai-quiz.js"></script>
     <script src="ai-file-handler.js"></script>
@@ -806,6 +957,12 @@
 
     <!-- Admin Analytics Dashboard -->
     <script src="admin-analytics.js"></script>
+
+    <!-- Room Manager -->
+    <script src="room-manager.js"></script>
+    
+    <!-- FINAL ABSOLUTE FIX: Chặn PATCH request, bảo vệ currentQuiz 100% -->
+    <script src="FINAL_ABSOLUTE_FIX.js"></script>
 
     <script>
         // Override renderQuiz with modern version for 3-column layout
@@ -834,6 +991,15 @@
             }
         });
     </script>
+
+    <!-- ROOM QUIZ VALIDATION & UPGRADE - MUST BE AFTER ROOM MANAGER -->
+    <script src="room-quiz-validation-upgrade.js"></script>
+
+    <!-- COMPLETE PROTECTION FOR ROOM QUIZ - MUST BE ABSOLUTE LAST -->
+    <script src="fix-room-quiz-complete-protection.js"></script>
+    
+    <!-- ABSOLUTE QUIZ PROTECTION - MUST BE VERY LAST -->
+    <script src="ABSOLUTE_QUIZ_PROTECTION.js"></script>
 </body>
 
 </html>
